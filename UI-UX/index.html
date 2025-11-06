@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartKasir - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">SK</div>
+            <div class="sidebar-title">SmartKasir</div>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item active">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="produk.html" class="menu-item">
+                <i class="fas fa-box"></i>
+                <span>Produk</span>
+            </a>
+            <a href="kategori.html" class="menu-item">
+                <i class="fas fa-tags"></i>
+                <span>Kategori</span>
+            </a>
+            <a href="transaksi.html" class="menu-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Transaksi</span>
+            </a>
+            <a href="laporan.html" class="menu-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Laporan</span>
+            </a>
+            <a href="pengaturan.html" class="menu-item">
+                <i class="fas fa-cog"></i>
+                <span>Pengaturan</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">A</div>
+                <div>
+                    <div style="font-weight: 600;">Admin</div>
+                    <div style="font-size: 0.875rem; color: var(--gray-400);">admin@smartkasir.com</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="window.location.href='login.html'">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="header-title">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Cari...">
+                </div>
+                <div class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-wrapper">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Penjualan</span>
+                    </div>
+                    <div class="stat-value">Rp 15.500.000</div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>12% dari bulan lalu</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Transaksi Hari Ini</span>
+                    </div>
+                    <div class="stat-value">147</div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>8 transaksi</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Produk</span>
+                    </div>
+                    <div class="stat-value">285</div>
+                    <div class="stat-change">
+                        <i class="fas fa-minus"></i>
+                        <span>Tidak berubah</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Stok Minimum</span>
+                    </div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-change negative">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>Perlu restock</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <!-- Recent Transactions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            Transaksi Terbaru
+                        </h2>
+                        <a href="transaksi.html" class="btn btn-sm btn-primary">
+                            Lihat Semua
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tanggal</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>#TRX001</td>
+                                        <td>02 Nov 2025</td>
+                                        <td>Rp 85.000</td>
+                                        <td><span class="badge badge-success">Selesai</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#TRX002</td>
+                                        <td>02 Nov 2025</td>
+                                        <td>Rp 125.000</td>
+                                        <td><span class="badge badge-success">Selesai</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#TRX003</td>
+                                        <td>02 Nov 2025</td>
+                                        <td>Rp 45.000</td>
+                                        <td><span class="badge badge-success">Selesai</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#TRX004</td>
+                                        <td>01 Nov 2025</td>
+                                        <td>Rp 200.000</td>
+                                        <td><span class="badge badge-success">Selesai</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#TRX005</td>
+                                        <td>01 Nov 2025</td>
+                                        <td>Rp 90.000</td>
+                                        <td><span class="badge badge-success">Selesai</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Products -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            Produk Terlaris
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="color: var(--gray-600); font-weight: 600; min-width: 20px;">1.</span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600;">Ayam Goreng</div>
+                                    <div style="font-size: 0.875rem; color: var(--gray-500);">147 terjual</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="color: var(--gray-600); font-weight: 600; min-width: 20px;">2.</span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600;">Nasi Goreng</div>
+                                    <div style="font-size: 0.875rem; color: var(--gray-500);">125 terjual</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="color: var(--gray-600); font-weight: 600; min-width: 20px;">3.</span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600;">Kopi Hitam</div>
+                                    <div style="font-size: 0.875rem; color: var(--gray-500);">98 terjual</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="color: var(--gray-600); font-weight: 600; min-width: 20px;">4.</span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600;">Teh Manis</div>
+                                    <div style="font-size: 0.875rem; color: var(--gray-500);">87 terjual</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="color: var(--gray-600); font-weight: 600; min-width: 20px;">5.</span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600;">Mie Goreng</div>
+                                    <div style="font-size: 0.875rem; color: var(--gray-500);">72 terjual</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

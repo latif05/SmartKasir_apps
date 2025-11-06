@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produk - SmartKasir</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">SK</div>
+            <div class="sidebar-title">SmartKasir</div>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="index.html" class="menu-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="produk.html" class="menu-item active">
+                <i class="fas fa-box"></i>
+                <span>Produk</span>
+            </a>
+            <a href="kategori.html" class="menu-item">
+                <i class="fas fa-tags"></i>
+                <span>Kategori</span>
+            </a>
+            <a href="transaksi.html" class="menu-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Transaksi</span>
+            </a>
+            <a href="laporan.html" class="menu-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Laporan</span>
+            </a>
+            <a href="pengaturan.html" class="menu-item">
+                <i class="fas fa-cog"></i>
+                <span>Pengaturan</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">A</div>
+                <div>
+                    <div style="font-weight: 600;">Admin</div>
+                    <div style="font-size: 0.875rem; color: var(--gray-400);">admin@smartkasir.com</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="window.location.href='login.html'">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="header-title">Produk</h1>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Cari produk...">
+                </div>
+                <button class="btn btn-primary" data-modal="modal-add-product">
+                    <i class="fas fa-plus"></i> Tambah Produk
+                </button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-wrapper">
+            <!-- Products Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Daftar Produk</h2>
+                    <div style="display: flex; gap: 1rem;">
+                        <select class="form-control" style="width: auto;">
+                            <option>Semua Kategori</option>
+                            <option>Makanan & Minuman</option>
+                            <option>Elektronik</option>
+                            <option>Pakaian</option>
+                            <option>Sembako</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nama Produk</th>
+                                    <th>Kategori</th>
+                                    <th>Harga Beli</th>
+                                    <th>Harga Jual</th>
+                                    <th>Stok</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>P001</td>
+                                    <td>Ayam Goreng</td>
+                                    <td><span class="badge badge-info">Makanan & Minuman</span></td>
+                                    <td>Rp 8.000</td>
+                                    <td><strong>Rp 12.000</strong></td>
+                                    <td><span class="badge badge-success">50</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="editRow(this, 'P001')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this, 'Apakah Anda yakin ingin menghapus produk ini?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>P002</td>
+                                    <td>Nasi Goreng</td>
+                                    <td><span class="badge badge-info">Makanan & Minuman</span></td>
+                                    <td>Rp 5.000</td>
+                                    <td><strong>Rp 8.000</strong></td>
+                                    <td><span class="badge badge-success">30</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="editRow(this, 'P002')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>P003</td>
+                                    <td>Mie Goreng</td>
+                                    <td><span class="badge badge-info">Makanan & Minuman</span></td>
+                                    <td>Rp 4.000</td>
+                                    <td><strong>Rp 7.000</strong></td>
+                                    <td><span class="badge badge-warning">25</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="editRow(this, 'P003')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>P004</td>
+                                    <td>Kopi Hitam</td>
+                                    <td><span class="badge badge-info">Makanan & Minuman</span></td>
+                                    <td>Rp 3.000</td>
+                                    <td><strong>Rp 5.000</strong></td>
+                                    <td><span class="badge badge-success">100</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="editRow(this, 'P004')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>P005</td>
+                                    <td>Teh Manis</td>
+                                    <td><span class="badge badge-info">Makanan & Minuman</span></td>
+                                    <td>Rp 2.000</td>
+                                    <td><strong>Rp 4.000</strong></td>
+                                    <td><span class="badge badge-success">80</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="editRow(this, 'P005')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>P006</td>
+                                    <td>Beras Premium</td>
+                                    <td><span class="badge badge-info">Sembako</span></td>
+                                    <td>Rp 12.000</td>
+                                    <td><strong>Rp 15.000</strong></td>
+                                    <td><span class="badge badge-success">200</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="editRow(this, 'P006')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Add Product -->
+    <div class="modal" id="modal-add-product">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Tambah Produk Baru</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">Nama Produk</label>
+                        <input type="text" class="form-control" placeholder="Masukkan nama produk" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kategori</label>
+                        <select class="form-control form-select">
+                            <option>Pilih kategori</option>
+                            <option>Makanan & Minuman</option>
+                            <option>Elektronik</option>
+                            <option>Pakaian</option>
+                            <option>Sembako</option>
+                        </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Harga Beli</label>
+                            <input type="text" class="form-control currency-input" placeholder="Rp 0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Harga Jual</label>
+                            <input type="text" class="form-control currency-input" placeholder="Rp 0" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stok Awal</label>
+                        <input type="number" class="form-control number-input" placeholder="0" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-add-product')">Batal</button>
+                <button class="btn btn-primary">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

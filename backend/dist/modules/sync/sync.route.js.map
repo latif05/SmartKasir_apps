@@ -1,0 +1,1 @@
+{"version":3,"file":"sync.route.js","sourceRoot":"","sources":["../../../src/modules/sync/sync.route.ts"],"names":[],"mappings":";;;AAAA,qCAAiC;AAEjC,uDAAmD;AAEnD,MAAM,MAAM,GAAG,IAAA,gBAAM,GAAE,CAAC;AAML,4BAAU;AAL7B,MAAM,UAAU,GAAG,IAAI,gCAAc,EAAE,CAAC;AAExC,MAAM,CAAC,GAAG,CAAC,OAAO,EAAE,UAAU,CAAC,IAAI,CAAC,CAAC;AACrC,MAAM,CAAC,IAAI,CAAC,OAAO,EAAE,UAAU,CAAC,IAAI,CAAC,CAAC"}

@@ -1,0 +1,20 @@
+{
+  "name": "smartkasir-ui-ux",
+  "version": "1.0.0",
+  "description": "UI/UX Mockup for SmartKasir Application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": ["smartkasir", "ui-ux", "mockup"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
+
