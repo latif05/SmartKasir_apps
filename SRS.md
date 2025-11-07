@@ -16,11 +16,11 @@ Dokumen Software Requirements Specification (SRS) ini merinci persyaratan fungsi
 *   Memastikan pemahaman yang konsisten antara semua pemangku kepentingan mengenai lingkup proyek.
 
 **1.2. Lingkup Produk (MVP)**
-SmartKasir MVP akan mencakup fitur inti untuk manajemen produk, pencatatan transaksi penjualan dasar, pelaporan sederhana, dan pengaturan aplikasi. Fokus utama adalah pada kemudahan penggunaan dan fungsionalitas offline dengan kemampuan sinkronisasi data. Fitur seperti multi-user, multi-cabang, manajemen pembelian, dan integrasi hardware eksternal yang lebih kompleks akan ditunda untuk rilis selanjutnya.
+SmartKasir MVP direvisi menjadi aplikasi kasir **offline-only** berbasis Flutter + SQLite. Lingkupnya meliputi manajemen produk, transaksi, laporan sederhana, pengaturan toko, serta manajemen role pengguna (Admin Premium & Kasir) dengan mekanisme aktivasi premium lokal. Tidak ada backend/sinkronisasi cloud pada MVP.
 
 **1.3. Audiens Dokumen**
 *   Product Manager
-*   Pengembang (Frontend Flutter, Backend Node.js)
+*   Pengembang Flutter (frontend + data lokal)
 *   Quality Assurance (QA) Engineer
 *   UI/UX Designer
 *   Tim Manajemen Proyek
@@ -28,7 +28,7 @@ SmartKasir MVP akan mencakup fitur inti untuk manajemen produk, pencatatan trans
 ### **2. Deskripsi Umum**
 
 **2.1. Perspektif Produk**
-SmartKasir adalah aplikasi mandiri yang dirancang untuk perangkat Android. Aplikasi ini akan berkomunikasi dengan backend Node.js melalui API untuk sinkronisasi data dan penyimpanan terpusat, namun dapat beroperasi secara penuh dalam mode offline menggunakan database SQLite lokal.
+SmartKasir adalah aplikasi mandiri Android yang **beroperasi sepenuhnya di perangkat** menggunakan SQLite sebagai penyimpanan utama. Seluruh logika bisnis (login, role, laporan, aktivasi premium) berjalan lokal tanpa koneksi backend/API. Internet hanya opsional untuk distribusi kode aktivasi atau pembaruan aplikasi.
 
 **2.2. Fitur Produk (Detail dari PRD)**
 
@@ -55,8 +55,10 @@ Berikut adalah fitur utama yang akan diimplementasikan pada MVP SmartKasir:
     *   Laporan Penjualan Harian/Periodik
     *   Laporan Produk Terlaris
     *   Laporan Stok
-*   **Pengaturan Aplikasi:**
+*   **Pengaturan & Aktivasi:**
     *   Pengaturan Informasi Toko (nama, alamat)
+    *   Manajemen role lokal (Admin & Kasir)
+    *   Aktivasi premium menggunakan kode lokal
 
 **2.3. Karakteristik Pengguna**
 *   **Tipe:** Pemilik UMKM, Kasir.
@@ -64,16 +66,20 @@ Berikut adalah fitur utama yang akan diimplementasikan pada MVP SmartKasir:
 *   **Tujuan:** Mencatat penjualan, memantau stok, dan mendapatkan laporan dasar dengan cepat dan efisien.
 
 **2.4. Kendala Umum**
-*   **Perangkat Keras:** Aplikasi ditujukan untuk perangkat Android (ponsel atau tablet).
-*   **Konektivitas:** Harus berfungsi penuh secara offline; koneksi internet diperlukan hanya untuk sinkronisasi data ke server pusat.
-*   **Kompleksitas:** Fitur harus tetap sederhana dan menghindari kompleksitas yang tidak perlu untuk mencapai tujuan efisiensi dan kemudahan penggunaan.
+*   **Perangkat Keras:** Aplikasi ditujukan untuk perangkat Android (ponsel atau tablet) dengan kapasitas penyimpanan cukup.
+*   **Konektivitas:** Seluruh fitur harus berfungsi tanpa internet; koneksi hanya opsional untuk pengiriman kode aktivasi.
+*   **Kompleksitas:** Antarmuka mesti sederhana agar kasir dapat beradaptasi cepat; fitur premium hanya muncul bagi Admin aktif.
 
 ### **3. Persyaratan Fungsional (Fungsional Requirements)**
 
 Ini adalah deskripsi detail tentang apa yang harus dilakukan sistem.
 
-**3.1. User Management (Basic)**
-*   **FR-UM-001: Login Sederhana:** Aplikasi harus memiliki mekanisme login sederhana (misal: satu set kredensial admin) untuk mengakses fitur utama. (Pada MVP, tidak ada fitur multi-user atau registrasi).
+**3.1. User & Role Management**
+*   **FR-UM-001: Multi Akun Lokal:** Sistem harus mendukung penyimpanan beberapa akun pada SQLite dengan atribut: nama, username unik, password hash, role (`admin` atau `cashier`), status aktif.
+*   **FR-UM-002: Login Role-based:** Pengguna masuk menggunakan username & password. Setelah login, UI harus menyesuaikan role—Admin melihat seluruh menu, Kasir hanya transaksi & stok.
+*   **FR-UM-003: Aktivasi Premium:** Admin harus memasukkan kode aktivasi sah untuk mengaktifkan fitur premium. Kode diverifikasi lokal (tabel `activation_codes`) dan menyimpan tanggal aktivasi & status premium.
+*   **FR-UM-004: Pembatasan Fitur Kasir:** Kasir tidak boleh mengakses layar laporan, pengaturan toko, atau manajemen produk advanced (hanya lihat stok).
+*   **FR-UM-005: Manajemen Kasir oleh Admin:** Admin dapat menambah, mengedit, menonaktifkan akun kasir dari perangkat yang sama.
 
 **3.2. Product Management**
 *   **FR-PM-001: Tambah Kategori Produk:** Pengguna harus dapat menambahkan kategori produk baru (nama, deskripsi).
@@ -123,11 +129,11 @@ Ini adalah deskripsi detail tentang apa yang harus dilakukan sistem.
 *   **FR-AS-001: Konfigurasi Info Toko:** Pengguna dapat mengisi/mengedit nama toko dan alamat, yang akan digunakan pada struk digital.
 *   **FR-AS-002: Konfigurasi Kategori:** Pengguna dapat menambah, mengedit, dan menghapus kategori produk.
 
-**3.6. Data Synchronization**
-*   **FR-DS-001: Sinkronisasi Manual:** Aplikasi harus mendeteksi ketersediaan internet dan memberikan opsi sinkronisasi (ekspor/impor) antara database lokal SQLite dan layanan backend ketika dibutuhkan. Backend memanfaatkan MySQL hanya untuk autentikasi pengguna sebelum menerima/menyediakan paket data.
-*   **FR-DS-002: Penanganan Konflik Dasar:** Untuk MVP, ketika pengguna mengimpor data hasil sinkronisasi dari perangkat lain, prioritas akan diberikan pada data lokal dan perubahan terbaru (`updated_at`) saat melakukan merge.
-*   **FR-DS-003: Indikator Status Sinkronisasi:** Pengguna harus dapat melihat status sinkronisasi (misal: "Sedang Sinkronisasi...", "Terakhir disinkronkan: ...", "Offline").
-*   **FR-DS-004: Manual Trigger Sinkronisasi:** Pengguna harus dapat secara manual memicu proses sinkronisasi.
+**3.6. Aktivasi & Monetisasi**
+*   **FR-AM-001: Input Kode Aktivasi:** Admin dapat memasukkan kode aktivasi premium. Kode divalidasi secara lokal (misal menggunakan checksum atau tabel `activation_codes`) dan status premium disimpan di tabel `settings`.
+*   **FR-AM-002: Validasi Masa Berlaku:** Sistem harus menyimpan tanggal aktivasi dan menolak kode yang sudah digunakan/kedaluwarsa.
+*   **FR-AM-003: Simulasi Pembayaran:** Aplikasi menampilkan layar informasi paket premium + tombol "Masukkan Kode Aktivasi" sebagai simulasi pembayaran awal. Integrasi pembayaran online akan dipertimbangkan di masa depan.
+*   **FR-AM-004: Pembatasan UI Berdasarkan Premium:** Jika status premium nonaktif, menu laporan/pengaturan menampilkan pesan upsell dan tidak dapat diakses.
 
 ### **4. Persyaratan Non-Fungsional (Non-Functional Requirements)**
 
@@ -135,7 +141,7 @@ Ini adalah deskripsi detail tentang apa yang harus dilakukan sistem.
 *   **NFR-PERF-001:** Waktu muat layar utama/dashboard tidak boleh melebihi 3 detik.
 *   **NFR-PERF-002:** Waktu proses penyelesaian transaksi (dari klik 'Bayar' hingga struk ditampilkan) tidak boleh melebihi 2 detik.
 *   **NFR-PERF-003:** Operasi CRUD dasar (Tambah/Edit/Hapus Produk) harus selesai dalam waktu kurang dari 1 detik.
-*   **NFR-PERF-004:** Sinkronisasi data dasar (misal: 100 transaksi + 50 produk baru) harus selesai dalam waktu 30 detik (dengan koneksi internet stabil).
+*   **NFR-PERF-004:** Aktivasi premium (validasi kode + pembaruan status) harus selesai < 2 detik karena seluruhnya lokal.
 
 **4.2. Usabilitas (Usability)**
 *   **NFR-USAB-001:** Desain UI harus minimalis, bersih, dan intuitif, memungkinkan pengguna menyelesaikan tugas utama dengan sedikit klik.
@@ -144,18 +150,18 @@ Ini adalah deskripsi detail tentang apa yang harus dilakukan sistem.
 *   **NFR-USAB-004:** Aplikasi harus menyediakan umpan balik visual (loading indicator, toast message) untuk setiap aksi pengguna.
 
 **4.3. Keandalan (Reliability)**
-*   **NFR-RELI-001:** Aplikasi harus memiliki tingkat ketersediaan 99.9% selama jam operasional (tidak termasuk waktu down server terjadwal).
-*   **NFR-RELI-002:** Setiap proses sinkronisasi harus menghasilkan backup atau paket data yang konsisten dengan kondisi database SQLite lokal setelah proses selesai.
-*   **NFR-RELI-003:** Mekanisme penanganan error yang baik harus ada untuk transaksi database dan komunikasi API.
+*   **NFR-RELI-001:** Aplikasi harus tetap dapat digunakan meski perangkat offline dalam jangka panjang (minimal 30 hari) tanpa degradasi data.
+*   **NFR-RELI-002:** Backup lokal (export database) harus tersedia untuk Admin sebagai langkah manual.
+*   **NFR-RELI-003:** Mekanisme rollback transaksi database lokal harus ada untuk mencegah data korup jika aplikasi crash saat transaksi.
 
 **4.4. Keamanan (Security)**
-*   **NFR-SEC-001:** Data sensitif (misal: password jika ada user, harga beli) harus disimpan terenkripsi di database remote.
-*   **NFR-SEC-002:** Komunikasi antara aplikasi Flutter dan backend Node.js harus menggunakan HTTPS.
-*   **NFR-SEC-003:** Autentikasi API harus diterapkan untuk setiap permintaan ke backend.
+*   **NFR-SEC-001:** Data sensitif (password pengguna, kode aktivasi) harus disimpan hashed/encrypted di SQLite.
+*   **NFR-SEC-002:** Aplikasi harus mengunci fitur premium berdasarkan status lokal; manipulasi manual pada database harus terdeteksi (misal checksum).
+*   **NFR-SEC-003:** Aplikasi harus menyediakan opsi PIN/kode akses cepat untuk mengunci layar transaksi.
 
 **4.5. Skalabilitas (Scalability)**
-*   **NFR-SCAL-001:** Arsitektur backend harus mampu menangani peningkatan volume data (transaksi, produk) dan jumlah pengguna tanpa penurunan performa yang signifikan.
-*   **NFR-SCAL-002:** Desain database harus mendukung penambahan tabel dan kolom baru untuk fitur di masa depan tanpa memerlukan perubahan skema mayor.
+*   **NFR-SCAL-001:** Desain SQLite harus mampu menangani minimal 50.000 baris transaksi dengan degradasi performa minimal.
+*   **NFR-SCAL-002:** Struktur tabel harus mudah diekstensikan (misal penambahan modul pelanggan) tanpa migrasi kompleks.
 
 **4.6. Maintainabilitas (Maintainability)**
 *   **NFR-MAINT-001:** Kode sumber harus mengikuti prinsip Clean Architecture (Domain, Data, Presentation layers) dan Clean Code (konsistensi penamaan, komentar yang jelas, unit testing yang memadai).
@@ -163,8 +169,7 @@ Ini adalah deskripsi detail tentang apa yang harus dilakukan sistem.
 
 **4.7. Lingkungan Operasi (Operational Environment)**
 *   **NFR-ENV-001:** **Aplikasi Mobile:** Android 8.0 (Oreo) atau lebih baru.
-*   **NFR-ENV-002:** **Backend Server:** Lingkungan Linux/Windows Server yang mendukung Node.js.
-*   **NFR-ENV-003:** **Database:** MySQL 8+ (tabel `users` untuk autentikasi), SQLite terbaru untuk data operasional.
+*   **NFR-ENV-002:** **Database Lokal:** SQLite (melalui library Drift/sqflite). Tidak ada backend server pada MVP.
 
 ### **5. Arsitektur Sistem**
 
@@ -203,21 +208,22 @@ Ini adalah deskripsi detail tentang apa yang harus dilakukan sistem.
 *   **Tingkat Adopsi:** Target X pengguna aktif bulanan dalam 3 bulan pertama.
 *   **Efisiensi Transaksi:** Rata-rata waktu transaksi < 5 detik.
 *   **Kepuasan Pengguna:** Skor rata-rata 4.0+ di platform Android Play Store.
-*   **Keandalan Sinkronisasi:** 98% proses sinkronisasi manual (unggah/unduh paket) selesai tanpa error.
+*   **Konversi Premium:** Minimal Y% admin berhasil mengaktivasi kode premium.
 
 ### **8. Rencana Pengujian (High-Level)**
 
-*   **Unit Testing:** Untuk logika bisnis inti di Domain Layer (Flutter & Node.js).
+*   **Unit Testing:** Untuk logika bisnis inti di Domain Layer (Flutter, SQLite helpers).
 *   **Widget Testing (Flutter):** Untuk menguji komponen UI secara terisolasi.
-*   **Integration Testing:** Menguji interaksi antar komponen (misal: Flutter dengan SQLite, Node.js dengan MySQL untuk autentikasi).
-*   **End-to-End Testing:** Mensimulasikan alur pengguna secara lengkap, termasuk sinkronisasi.
-*   **Performance Testing:** Menguji performa aplikasi di bawah beban tertentu.
+*   **Integration Testing:** Menguji interaksi antar komponen Flutter dengan SQLite (Drift) dan layer repository.
+*   **End-to-End Testing:** Mensimulasikan alur pengguna secara lengkap (login, aktivasi premium, transaksi, laporan).
+*   **Performance Testing:** Menguji performa aplikasi di bawah beban data besar (misal 50k transaksi).
 *   **User Acceptance Testing (UAT):** Pengujian oleh pengguna akhir/perwakilan UMKM.
 
 ### **9. Asumsi & Ketergantungan**
 
-*   Ketersediaan tim dengan keahlian Flutter, Node.js, MySQL (autentikasi), dan SQLite.
-*   Ketersediaan infrastruktur server untuk backend Node.js, layanan sinkronisasi, dan database MySQL (tabel `users`).
+*   Ketersediaan tim dengan keahlian Flutter dan SQLite (Drift) serta keamanan data lokal.
+*   Tidak ada kebutuhan infrastruktur server pada MVP; hanya diperlukan perangkat Android untuk pengujian.
 *   Akses ke perangkat Android untuk pengujian.
 
 ---
+

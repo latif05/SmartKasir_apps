@@ -17,7 +17,8 @@ Dokumen ini menjelaskan persyaratan fungsional dan non-fungsional untuk pengemba
 *   Mengotomatiskan **pengelolaan stok** untuk menghindari kehabisan atau kelebihan barang.
 *   Menghasilkan **laporan penjualan dan laba/rugi sederhana** secara otomatis untuk membantu pengambilan keputusan bisnis.
 *   Membangun aplikasi dengan **antarmuka yang sangat simple dan intuitif** untuk pengalaman pengguna yang optimal.
-*   Menyediakan solusi yang **ringan dan cepat** dalam operasionalnya.
+*   Menyediakan solusi **sepenuhnya offline** sehingga tetap dapat digunakan di area minim konektivitas.
+*   Memfasilitasi **monetisasi fitur premium** melalui aktivasi lokal bagi pemilik usaha yang membutuhkan akses penuh.
 
 ### **3. Visi Produk**
 
@@ -38,7 +39,7 @@ Menjadi aplikasi kasir pilihan utama bagi UMKM di Indonesia, yang dikenal karena
 
 ### **5. Lingkup (Scope) MVP - Minimum Viable Product**
 
-MVP ini akan fokus pada fitur-fitur inti yang paling esensial untuk memecahkan masalah utama target pengguna, yaitu pencatatan transaksi, manajemen stok dasar, dan pelaporan penjualan sederhana. Fitur-fitur yang lebih canggih akan dipertimbangkan pada fase pengembangan berikutnya.
+MVP direvisi untuk beroperasi **100% offline** menggunakan SQLite lokal tanpa ketergantungan backend eksternal. Fokusnya mencakup pencatatan transaksi, manajemen stok, pelaporan sederhana, serta **manajemen role user (Admin Premium vs Kasir)** dengan mekanisme aktivasi premium berbasis kode lokal. Integrasi jaringan atau sinkronisasi cloud tidak menjadi bagian MVP dan akan dievaluasi kembali setelah fitur offline matang.
 
 ### **6. Fitur Fungsional**
 
@@ -73,22 +74,26 @@ MVP ini akan fokus pada fitur-fitur inti yang paling esensial untuk memecahkan m
 *   **PRD-LAP-003: Laporan Produk Terlaris:** Menampilkan daftar produk dengan volume penjualan tertinggi dalam periode tertentu.
 *   **PRD-LAP-004: Laporan Stok:** Menampilkan ringkasan stok produk saat ini (jumlah total, produk dengan stok di bawah minimum).
 
-**6.4. Modul Pengaturan (Settings)**
-*   **PRD-SET-001: Pengaturan Informasi Toko:** Pengguna dapat mengisi/mengedit nama toko dan alamat yang akan muncul di struk.
-*   **PRD-SET-002: Manajemen Kategori Produk:** Pengguna dapat menambah, mengedit, dan menghapus kategori produk.
+**6.4. Modul Role & Aktivasi Premium**
+*   **PRD-ROLE-001: Role Admin (Premium):** Admin memiliki akses penuh (produk, transaksi, laporan, pengaturan). Status premium disimpan di SQLite dan memengaruhi tampilan menu.
+*   **PRD-ROLE-002: Role Kasir (Non-Premium):** Kasir hanya dapat membuat transaksi dan melihat stok. Menu laporan/pengaturan tersembunyi atau dinonaktifkan.
+*   **PRD-ROLE-003: Manajemen Akun Lokal:** Admin dapat membuat akun kasir baru atau menonaktifkannya, semuanya tersimpan di SQLite.
+*   **PRD-ROLE-004: Aktivasi Premium Lokal:** Admin memasukkan kode aktivasi (dikirim melalui kanal manual) untuk membuka fitur premium. Kode diverifikasi secara lokal (misal tabel `activation_codes`) dan disimpan sebagai status berbayar.
+*   **PRD-ROLE-005: Simulasi Pembayaran:** MVP menyediakan screen aktivasi dengan input kode + halaman informasi paket. Proses pembayaran asli akan disimulasikan.
 
-**6.5. Modul Kategori (Category)**
-*   **PRD-CAT-002: Manajemen Kategori Produk:** Pengguna dapat menambah, mengedit, dan menghapus kategori produk.
+**6.5. Modul Pengaturan (Settings)**
+*   **PRD-SET-001: Pengaturan Informasi Toko:** Pengguna dapat mengisi/mengedit nama toko dan alamat yang akan muncul di struk.
+*   **PRD-SET-002: Manajemen Kategori Produk:** Admin Premium dapat menambah, mengedit, dan menghapus kategori produk.
 
 ### **7. Fitur Non-Fungsional**
 
 *   **NFR-PERF-001 (Performa):** Waktu loading layar utama/dashboard dan layar transaksi tidak lebih dari 3 detik. Proses penyelesaian transaksi tidak lebih dari 2 detik.
 *   **NFR-USAB-001 (Usability):** Antarmuka pengguna harus intuitif, mudah dipelajari, dan minim langkah untuk menyelesaikan tugas-tugas utama (misal: 3-5 klik untuk menyelesaikan transaksi).
 *   **NFR-USAB-002 (Responsif):** Aplikasi harus responsif dan berfungsi baik di berbagai ukuran layar perangkat Android.
-*   **NFR-SCAL-001 (Skalabilitas):** Arsitektur backend harus mendukung penambahan fitur di masa depan dan peningkatan jumlah transaksi/pengguna.
-*   **NFR-SEC-001 (Keamanan):** Data transaksi dan produk harus dilindungi dari akses tidak sah. (Autentikasi sederhana untuk MVP, misal: PIN/password admin tunggal).
-*   **NFR-AVAIL-001 (Ketersediaan):** Aplikasi lokal (Flutter + SQLite) harus dapat berfungsi penuh tanpa koneksi internet.
-*   **NFR-AVAIL-002 (Sinkronisasi Data):** Data lokal (SQLite) tetap menjadi sumber kebenaran, namun aplikasi harus menyediakan mekanisme sinkronisasi manual ke backend (Node.js + MySQL untuk autentikasi) saat koneksi tersedia, misalnya untuk backup atau rekonsiliasi data antar perangkat.
+*   **NFR-SCAL-001 (Skalabilitas Lokal):** Struktur SQLite dan modularisasi aplikasi harus siap menampung pertumbuhan data transaksi tanpa menurunkan performa.
+*   **NFR-SEC-001 (Keamanan):** Data transaksi dan produk harus dilindungi dari akses tidak sah menggunakan PIN/password serta pembatasan akses berbasis role.
+*   **NFR-AVAIL-001 (Ketersediaan):** Seluruh fitur (termasuk aktivasi premium) harus berjalan sepenuhnya offline. Aktivasi hanya memerlukan kode lokal yang diverifikasi pada perangkat.
+*   **NFR-MON-001 (Monetisasi):** Status premium harus tersimpan aman secara lokal, mendukung audit sederhana (riwayat aktivasi, tanggal berlaku).
 *   **NFR-MAINT-001 (Maintainability):** Kode harus ditulis menggunakan prinsip Clean Architecture (Flutter & Node.js) agar mudah dipelihara dan dikembangkan oleh tim.
 *   **NFR-TEST-001 (Testability):** Setiap komponen kunci harus dapat diuji secara terpisah (unit testing, widget testing untuk Flutter).
 
@@ -137,20 +142,20 @@ MVP ini akan fokus pada fitur-fitur inti yang paling esensial untuk memecahkan m
 *   **Retensi:** Persentase pengguna yang kembali menggunakan aplikasi setelah 30 hari.
 *   **Efisiensi Transaksi:** Rata-rata waktu yang dibutuhkan untuk menyelesaikan satu transaksi.
 *   **Feedback Pengguna:** Skor kepuasan pengguna (misal: dari survei atau rating aplikasi).
-*   **Keandalan Sinkronisasi:** Persentase sinkronisasi data yang berhasil antara lokal dan server.
+*   **Konversi Premium:** Persentase pengguna yang berhasil mengaktivasi kode premium dibanding total instalasi.
 
 ### **12. Asumsi & Keterbatasan**
 
-*   Pengguna memiliki perangkat Android yang kompatibel.
-*   Koneksi internet stabil diperlukan untuk sinkronisasi data ke server backend.
-*   MVP tidak akan menyertakan manajemen multi-user atau multi-cabang.
+*   Pengguna memiliki perangkat Android yang kompatibel dengan penyimpanan lokal cukup.
+*   Aplikasi tidak membutuhkan koneksi internet untuk beroperasi; internet hanya opsional untuk distribusi kode aktivasi.
+*   Multi-user dibatasi pada dua role (Admin & Kasir) dan seluruh data pengguna disimpan secara lokal.
 *   Integrasi printer thermal eksternal akan dipertimbangkan pada fase selanjutnya jika ada kebutuhan kuat.
 
 ### **13. Tahapan Pengembangan Selanjutnya (Roadmap - Tentatif)**
 
-*   Integrasi printer thermal.
-*   Manajemen hak akses pengguna (misal: Admin, Kasir).
-*   Laporan yang lebih canggih (laba/rugi detail, laporan penjualan per karyawan).
+*   Integrasi printer thermal & struk fisik.
+*   Sinkronisasi/backup opsional ke cloud setelah versi offline stabil.
+*   Laporan lanjutan (laba/rugi detail, penjualan per kasir).
 *   Manajemen pembelian/supplier.
-*   Integrasi e-wallet/pembayaran digital.
-*   Manajemen pelanggan.
+*   Integrasi pembayaran digital dan aktivasi premium otomatis.
+*   Manajemen pelanggan & program loyalti.
