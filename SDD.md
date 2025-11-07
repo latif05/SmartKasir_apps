@@ -89,9 +89,10 @@ Seluruh data pipeline berada di perangkat (tidak ada API call). Aktivasi premium
   - `GetPremiumStatus`
 - **UI Flow:**
   1. Admin membuka layar Aktivasi Premium.
-  2. Input kode → validasi lokal (regex + referensi tabel kode atau algoritma checksum).
-  3. Jika valid, update `activation_status` + `settings`.
-  4. Navigasi & menu diperbaharui otomatis.
+  2. Halaman menampilkan benefit paket serta harga **Rp30.000**.
+  3. Admin memasukkan kode aktivasi dan sistem memvalidasi secara lokal (regex, tabel kode, atau checksum).
+  4. Jika valid, `activation_status` dan `settings` diperbarui.
+  5. Navigasi & menu diperbaharui otomatis.
 
 ### 3.3 Produk & Stok
 - **Entities:** `Category`, `Product`.
@@ -217,3 +218,7 @@ Setiap fitur mengikuti pola Clean Architecture (domain/data/presentation) agar m
 ---
 
 Dokumen ini menjadi dasar pengembangan implementasi Flutter. Perubahan lebih lanjut harus terus disinkronkan dengan PRD & SRS agar konsisten.
+
+
+
+

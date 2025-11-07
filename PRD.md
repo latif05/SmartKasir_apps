@@ -78,7 +78,7 @@ MVP direvisi untuk beroperasi **100% offline** menggunakan SQLite lokal tanpa ke
 *   **PRD-ROLE-001: Role Admin (Premium):** Admin memiliki akses penuh (produk, transaksi, laporan, pengaturan). Status premium disimpan di SQLite dan memengaruhi tampilan menu.
 *   **PRD-ROLE-002: Role Kasir (Non-Premium):** Kasir hanya dapat membuat transaksi dan melihat stok. Menu laporan/pengaturan tersembunyi atau dinonaktifkan.
 *   **PRD-ROLE-003: Manajemen Akun Lokal:** Admin dapat membuat akun kasir baru atau menonaktifkannya, semuanya tersimpan di SQLite.
-*   **PRD-ROLE-004: Aktivasi Premium Lokal:** Admin memasukkan kode aktivasi (dikirim melalui kanal manual) untuk membuka fitur premium. Kode diverifikasi secara lokal (misal tabel `activation_codes`) dan disimpan sebagai status berbayar.
+*   **PRD-ROLE-004: Aktivasi Premium Lokal:** Admin memasukkan kode aktivasi (dikirim melalui kanal manual) untuk membuka fitur premium berbayar **Rp30.000**. Kode diverifikasi secara lokal (misal tabel `activation_codes`) dan disimpan sebagai status berbayar.
 *   **PRD-ROLE-005: Simulasi Pembayaran:** MVP menyediakan screen aktivasi dengan input kode + halaman informasi paket. Proses pembayaran asli akan disimulasikan.
 
 **6.5. Modul Pengaturan (Settings)**

@@ -132,7 +132,7 @@ Ini adalah deskripsi detail tentang apa yang harus dilakukan sistem.
 **3.6. Aktivasi & Monetisasi**
 *   **FR-AM-001: Input Kode Aktivasi:** Admin dapat memasukkan kode aktivasi premium. Kode divalidasi secara lokal (misal menggunakan checksum atau tabel `activation_codes`) dan status premium disimpan di tabel `settings`.
 *   **FR-AM-002: Validasi Masa Berlaku:** Sistem harus menyimpan tanggal aktivasi dan menolak kode yang sudah digunakan/kedaluwarsa.
-*   **FR-AM-003: Simulasi Pembayaran:** Aplikasi menampilkan layar informasi paket premium + tombol "Masukkan Kode Aktivasi" sebagai simulasi pembayaran awal. Integrasi pembayaran online akan dipertimbangkan di masa depan.
+*   **FR-AM-003: Simulasi Pembayaran:** Aplikasi menampilkan layar informasi paket premium seharga **Rp30.000** beserta tombol "Masukkan Kode Aktivasi" sebagai simulasi pembayaran awal. Integrasi pembayaran online akan dipertimbangkan di masa depan.
 *   **FR-AM-004: Pembatasan UI Berdasarkan Premium:** Jika status premium nonaktif, menu laporan/pengaturan menampilkan pesan upsell dan tidak dapat diakses.
 
 ### **4. Persyaratan Non-Fungsional (Non-Functional Requirements)**
