@@ -1,9 +1,14 @@
 import 'package:get_it/get_it.dart';
 
+import '../../features/activation/data/datasources/activation_local_data_source.dart';
+import '../../features/activation/data/repositories/activation_repository_impl.dart';
+import '../../features/activation/domain/repositories/activation_repository.dart';
 import '../../features/auth/data/datasources/auth_local_data_source.dart';
-import '../../features/auth/data/datasources/auth_remote_data_source.dart';
+import '../../features/auth/data/datasources/user_dao.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/user_management/data/repositories/user_management_repository_impl.dart';
+import '../../features/user_management/domain/repositories/user_management_repository.dart';
 import '../database/app_database.dart';
 
 final GetIt serviceLocator = GetIt.instance;
@@ -14,14 +19,23 @@ Future<void> configureDependencies() async {
   _registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImpl(serviceLocator<AppDatabase>()),
   );
-  _registerLazySingleton<AuthRemoteDataSource>(
-    AuthRemoteDataSourceImpl.new,
+  _registerLazySingleton<UserDao>(
+    () => UserDao(serviceLocator<AppDatabase>()),
+  );
+  _registerLazySingleton<ActivationLocalDataSource>(
+    () => ActivationLocalDataSource(serviceLocator<AppDatabase>()),
+  );
+  _registerLazySingleton<ActivationRepository>(
+    () => ActivationRepositoryImpl(serviceLocator()),
   );
   _registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       localDataSource: serviceLocator(),
-      remoteDataSource: serviceLocator(),
+      userDao: serviceLocator(),
     ),
+  );
+  _registerLazySingleton<UserManagementRepository>(
+    () => UserManagementRepositoryImpl(serviceLocator()),
   );
 }
 

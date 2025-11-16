@@ -26,14 +26,12 @@ class ProductLocalDataSource {
   Future<void> updateStock({
     required String productId,
     required int newStock,
-    String? syncStatus,
   }) {
     return (_database.update(_database.products)
           ..where((tbl) => tbl.id.equals(productId)))
         .write(
       ProductsCompanion(
         stock: Value(newStock),
-        syncStatus: Value(syncStatus ?? 'pending'),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -45,7 +43,6 @@ class ProductLocalDataSource {
         .write(
       ProductsCompanion(
         isDeleted: const Value(1),
-        syncStatus: const Value('pending'),
         updatedAt: Value(DateTime.now()),
       ),
     );

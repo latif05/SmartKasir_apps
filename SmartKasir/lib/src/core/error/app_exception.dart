@@ -26,3 +26,12 @@ class AuthenticationException extends AppException {
   const AuthenticationException(super.message);
 }
 
+
+class ActivationException extends AppException {
+  const ActivationException(super.message);
+}
+
+class ValidationException extends AppException {
+  const ValidationException(super.message);
+}
+

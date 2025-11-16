@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 part 'app_database.g.dart';
 
@@ -17,12 +20,14 @@ LazyDatabase _openConnection() {
 
 @DriftDatabase(
   tables: [
+    Users,
+    ActivationStatus,
+    ActivationCodes,
     Categories,
     Products,
     Transactions,
     TransactionItems,
     Settings,
-    SyncLogs,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -35,6 +40,7 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
+          await _seedDefaults();
         },
         onUpgrade: (Migrator m, int from, int to) async {
           // Add migration steps here when schemaVersion increments.
@@ -43,6 +49,97 @@ class AppDatabase extends _$AppDatabase {
           await customStatement('PRAGMA foreign_keys = ON');
         },
       );
+  Future<void> _seedDefaults() async {
+    // Seed activation status row
+    await into(activationStatus).insertOnConflictUpdate(
+      ActivationStatusCompanion.insert(
+        id: const Value(1),
+        isPremium: const Value(0),
+        activatedAt: const Value(null),
+        codeUsed: const Value(null),
+      ),
+    );
+
+    await into(activationCodes).insertOnConflictUpdate(
+      ActivationCodesCompanion.insert(
+        code: 'SMARTPREMIUM30',
+        description: const Value('Paket Premium Rp30.000'),
+        maxUse: const Value(1),
+        alreadyUsed: const Value(0),
+      ),
+    );
+
+    // Seed default admin if not exists
+    final existingAdmin = await (select(users)
+          ..where((tbl) => tbl.username.equals('admin')))
+        .getSingleOrNull();
+
+    if (existingAdmin == null) {
+      final uuid = const Uuid();
+      await into(users).insert(
+        UsersCompanion.insert(
+          id: uuid.v4(),
+          username: 'admin',
+          passwordHash: _hashPassword('admin123'),
+          displayName: 'Administrator',
+          role: Value('admin'),
+        ),
+      );
+    }
+  }
+}
+
+String _hashPassword(String value) {
+  final bytes = utf8.encode(value);
+  return sha256.convert(bytes).toString();
+}
+
+class Users extends Table {
+  TextColumn get id => text()();
+  TextColumn get username => text()();
+  TextColumn get passwordHash =>
+      text().named('password_hash')();
+  TextColumn get displayName =>
+      text().named('display_name')();
+  TextColumn get role =>
+      text().withDefault(const Constant('cashier'))();
+  IntColumn get isActive =>
+      integer().named('is_active').withDefault(const Constant(1))();
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {username},
+      ];
+}
+
+class ActivationStatus extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get isPremium =>
+      integer().named('is_premium').withDefault(const Constant(0))();
+  DateTimeColumn get activatedAt =>
+      dateTime().named('activated_at').nullable()();
+  TextColumn get codeUsed =>
+      text().named('code_used').nullable()();
+  TextColumn get note => text().nullable()();
+}
+
+class ActivationCodes extends Table {
+  TextColumn get code => text()();
+  TextColumn get description => text().nullable()();
+  IntColumn get maxUse =>
+      integer().named('max_use').nullable()();
+  IntColumn get alreadyUsed =>
+      integer().named('already_used').withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {code};
 }
 
 class Categories extends Table {
@@ -68,12 +165,11 @@ class Products extends Table {
   RealColumn get purchasePrice => real()();
   RealColumn get sellingPrice => real()();
   IntColumn get stock => integer().withDefault(const Constant(0))();
+  IntColumn get stockMin =>
+      integer().named('stock_min').withDefault(const Constant(0))();
   TextColumn get unit => text().nullable()();
   TextColumn get imageUrl => text().nullable()();
   IntColumn get isDeleted => integer().withDefault(const Constant(0))();
-  TextColumn get syncStatus =>
-      text().withDefault(const Constant('pending'))();
-  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
   DateTimeColumn get createdAt =>
       dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt =>
@@ -103,11 +199,8 @@ class Transactions extends Table {
       text().named('payment_method').withDefault(const Constant('cash'))();
   TextColumn get status =>
       text().withDefault(const Constant('completed'))();
-  IntColumn get isSynced =>
-      integer().named('is_synced').withDefault(const Constant(0))();
-  TextColumn get syncStatus => text().nullable().named('sync_status')();
-  DateTimeColumn get lastSyncedAt =>
-      dateTime().nullable().named('last_synced_at')();
+  TextColumn get createdBy =>
+      text().nullable().named('created_by')();
   IntColumn get isDeleted => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt =>
       dateTime().withDefault(currentDateAndTime)();
@@ -155,17 +248,4 @@ class Settings extends Table {
 
   @override
   Set<Column> get primaryKey => {key};
-}
-
-class SyncLogs extends Table {
-  TextColumn get id => text()();
-  TextColumn get resource => text().named('table_name')();
-  TextColumn get action => text()();
-  TextColumn get status => text().nullable()();
-  TextColumn get errorMessage => text().nullable()();
-  DateTimeColumn get syncedAt =>
-      dateTime().withDefault(currentDateAndTime)();
-
-  @override
-  Set<Column> get primaryKey => {id};
 }

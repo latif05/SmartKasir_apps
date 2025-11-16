@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/activation/presentation/providers/activation_providers.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
 import '../features/dashboard/presentation/pages/dashboard_page.dart';
-import '../features/categories/presentation/pages/categories_placeholder_page.dart';
-import '../features/user_management/presentation/pages/user_management_page.dart';
 import '../features/products/presentation/pages/products_placeholder_page.dart';
 import '../features/reports/presentation/pages/reports_placeholder_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
@@ -37,13 +35,6 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
       allowedRoles: const {'admin', 'cashier'},
     ),
     _NavigationDestination(
-      icon: Icons.category_outlined,
-      activeIcon: Icons.category,
-      label: 'Kategori',
-      builder: () => const CategoriesPlaceholderPage(),
-      allowedRoles: const {'admin', 'cashier'},
-    ),
-    _NavigationDestination(
       icon: Icons.shopping_cart_outlined,
       activeIcon: Icons.shopping_cart,
       label: 'Transaksi',
@@ -51,19 +42,12 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
       allowedRoles: const {'admin', 'cashier'},
     ),
     _NavigationDestination(
-      icon: Icons.people_outline,
-      activeIcon: Icons.people,
-      label: 'Pengguna',
-      builder: () => const UserManagementPage(),
-      allowedRoles: const {'admin'},
-      requiresPremium: true,
-    ),
-    _NavigationDestination(
       icon: Icons.bar_chart_outlined,
       activeIcon: Icons.bar_chart,
       label: 'Laporan',
       builder: () => const ReportsPlaceholderPage(),
       allowedRoles: const {'admin'},
+      requiresPremium: true,
     ),
     _NavigationDestination(
       icon: Icons.settings_outlined,
@@ -71,6 +55,7 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
       label: 'Pengaturan',
       builder: () => const SettingsPage(),
       allowedRoles: const {'admin'},
+      requiresPremium: true,
     ),
   ];
 
@@ -361,5 +346,4 @@ class _NavigationDestination {
   final Set<String> allowedRoles;
   final bool requiresPremium;
 }
-
 

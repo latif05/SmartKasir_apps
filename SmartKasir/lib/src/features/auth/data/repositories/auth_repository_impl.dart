@@ -1,20 +1,21 @@
 import '../../../../core/error/app_exception.dart';
+import '../../../../core/security/password_hasher.dart';
 import '../../../../core/utils/logger.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_data_source.dart';
-import '../datasources/auth_remote_data_source.dart';
+import '../datasources/user_dao.dart';
 import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required AuthLocalDataSource localDataSource,
-    required AuthRemoteDataSource remoteDataSource,
+    required UserDao userDao,
   })  : _localDataSource = localDataSource,
-        _remoteDataSource = remoteDataSource;
+        _userDao = userDao;
 
   final AuthLocalDataSource _localDataSource;
-  final AuthRemoteDataSource _remoteDataSource;
+  final UserDao _userDao;
 
   @override
   Future<User> login({
@@ -22,12 +23,28 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     try {
-      final result = await _remoteDataSource.login(
-        username: username,
-        password: password,
+      final dbUser = await _userDao.getByUsername(username);
+      if (dbUser == null || dbUser.isActive == 0) {
+        throw const AuthenticationException(
+          'Pengguna tidak ditemukan atau dinonaktifkan',
+        );
+      }
+
+      final isValid = PasswordHasher.verify(password, dbUser.passwordHash);
+      if (!isValid) {
+        throw const AuthenticationException('Username atau kata sandi salah');
+      }
+
+      final userModel = UserModel(
+        id: dbUser.id,
+        username: dbUser.username,
+        displayName: dbUser.displayName,
+        role: dbUser.role,
+        isActive: dbUser.isActive == 1,
       );
-      await _localDataSource.cacheUser(result);
-      return result.toEntity();
+
+      await _localDataSource.cacheUser(userModel);
+      return userModel.toEntity();
     } on AppException {
       rethrow;
     } catch (error, stackTrace) {

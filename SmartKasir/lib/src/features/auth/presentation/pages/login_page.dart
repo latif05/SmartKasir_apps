@@ -21,11 +21,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool _isObscured = true;
   bool _rememberMe = false;
 
-  final LinearGradient _primaryGradient = const LinearGradient(
-    colors: [
-      Color(0xFF6A7BFF),
-      Color(0xFF7F4FD7),
-    ],
+  final LinearGradient _backgroundGradient = const LinearGradient(
+    colors: [Color(0xFF6A7BFF), Color(0xFF7F4FD7)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  final LinearGradient _cardHeaderGradient = const LinearGradient(
+    colors: [Color(0xFF737BFF), Color(0xFF7F4FD7)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -56,7 +59,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(gradient: _primaryGradient),
+        decoration: BoxDecoration(gradient: _backgroundGradient),
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -94,199 +97,203 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            offset: const Offset(0, 16),
-            blurRadius: 40,
+            color: Colors.black.withValues(alpha: 0.18),
+            offset: const Offset(0, 18),
+            blurRadius: 50,
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-            decoration: BoxDecoration(
-              gradient: _primaryGradient,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  height: 72,
-                  width: 72,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.point_of_sale,
-                    color: Colors.white,
-                    size: 36,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  AppStrings.appName,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  AppStrings.loginSubtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(28, 28, 28, 32),
-            child: Form(
-              key: _formKey,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+              decoration: BoxDecoration(gradient: _cardHeaderGradient),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildTextField(
-                    context,
-                    controller: _usernameController,
-                    label: AppStrings.usernameLabel,
-                    hint: 'Masukkan email atau username',
-                    prefixIcon: Icons.person_outline,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Mohon masukkan email atau username';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  _buildTextField(
-                    context,
-                    controller: _passwordController,
-                    label: AppStrings.passwordLabel,
-                    hint: 'Masukkan password',
-                    prefixIcon: Icons.lock_outline,
-                    obscureText: _isObscured,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isObscured ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () => setState(() {
-                        _isObscured = !_isObscured;
-                      }),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Kata sandi tidak boleh kosong';
-                      }
-                      if (value.trim().length < 6) {
-                        return 'Minimal 6 karakter';
-                      }
-                      return null;
-                    },
-                    onFieldSubmitted: (_) => _onSubmit(),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: _rememberMe,
-                        onChanged: (value) {
-                          setState(() => _rememberMe = value ?? false);
-                        },
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          'Ingat saya',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {},
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 0),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: const Text('Lupa password?'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed:
-                          authState.status == AuthStatus.loading ? null : _onSubmit,
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                  child: Ink(
+                  Container(
+                    height: 80,
+                    width: 80,
                     decoration: BoxDecoration(
-                      gradient: _primaryGradient,
-                      borderRadius: BorderRadius.circular(14),
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
                     ),
-                    child: Center(
-                      child: authState.status == AuthStatus.loading
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation(Colors.white),
-                              ),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.login, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text(
-                                  AppStrings.loginButton,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
+                    child: const Icon(
+                      Icons.point_of_sale,
+                      color: Colors.white,
+                      size: 38,
                     ),
                   ),
+                  const SizedBox(height: 18),
+                  Text(
+                    AppStrings.appName,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (authState.status == AuthStatus.error &&
-                      authState.errorMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      authState.errorMessage!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.red[700],
-                      ),
+                  const SizedBox(height: 8),
+                  Text(
+                    AppStrings.loginSubtitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.85),
                     ),
-                  ],
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+            Container(
+              width: double.infinity,
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(32, 32, 32, 40),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTextField(
+                      context,
+                      controller: _usernameController,
+                      label: AppStrings.usernameLabel,
+                      hint: 'Masukkan email atau username',
+                      prefixIcon: Icons.person_outline,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Mohon masukkan email atau username';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      context,
+                      controller: _passwordController,
+                      label: AppStrings.passwordLabel,
+                      hint: 'Masukkan password',
+                      prefixIcon: Icons.lock_outline,
+                      obscureText: _isObscured,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isObscured ? Icons.visibility_off : Icons.visibility,
+                        ),
+                        onPressed: () => setState(() {
+                          _isObscured = !_isObscured;
+                        }),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Kata sandi tidak boleh kosong';
+                        }
+                        if (value.trim().length < 6) {
+                          return 'Minimal 6 karakter';
+                        }
+                        return null;
+                      },
+                      onFieldSubmitted: (_) => _onSubmit(),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _rememberMe,
+                          onChanged: (value) {
+                            setState(() => _rememberMe = value ?? false);
+                          },
+                        ),
+                        const Text('Ingat saya'),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {},
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(0, 0),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text(
+                                'Lupa password?',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: authState.status == AuthStatus.loading
+                            ? null
+                            : _onSubmit,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            gradient: _cardHeaderGradient,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Center(
+                            child: authState.status == AuthStatus.loading
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor:
+                                          AlwaysStoppedAnimation(Colors.white),
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Icon(Icons.login, color: Colors.white),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        AppStrings.loginButton,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (authState.status == AuthStatus.error &&
+                        authState.errorMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        authState.errorMessage!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.red[700],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

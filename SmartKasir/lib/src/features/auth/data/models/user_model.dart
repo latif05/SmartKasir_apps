@@ -6,6 +6,7 @@ class UserModel extends User {
     required super.username,
     required super.displayName,
     required super.role,
+    super.isActive = true,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -14,6 +15,7 @@ class UserModel extends User {
       username: json['username'] as String? ?? '',
       displayName: json['display_name'] as String? ?? '',
       role: json['role'] as String? ?? 'cashier',
+      isActive: json['is_active'] as bool? ?? true,
     );
   }
 
@@ -23,6 +25,7 @@ class UserModel extends User {
       'username': username,
       'display_name': displayName,
       'role': role,
+      'is_active': isActive,
     };
   }
 
@@ -32,6 +35,7 @@ class UserModel extends User {
       username: user.username,
       displayName: user.displayName,
       role: user.role,
+      isActive: user.isActive,
     );
   }
 
@@ -41,6 +45,7 @@ class UserModel extends User {
       username: username,
       displayName: displayName,
       role: role,
+      isActive: isActive,
     );
   }
 }

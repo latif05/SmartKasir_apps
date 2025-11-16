@@ -25,12 +25,12 @@ Setiap sprint ≈ 10 hari kerja. Status terakhir diperbarui setelah revisi arsit
 | Hari | Task ID    | Tugas                                                                  | Status       |
 |------|------------|------------------------------------------------------------------------|--------------|
 | 11-12| S2-FE-001  | Auth domain layer (entities & use case login/cached/logout)            | Done         |
-| 12-13| S2-FE-002  | Auth data layer (User repository Drift, hashing util)                  | In Progress  |
+| 12-13| S2-FE-002  | Auth data layer (User repository Drift, hashing util)                  | Done         |
 | 13-14| S2-UX-002  | Finalisasi UI login + remember me + feedback error                     | Done         |
-| 14-15| S2-FE-003  | Role-based navigation guard (Admin vs Kasir)                           | To Do        |
-| 15-17| S2-FE-004  | Aktivasi premium lokal (kode input, verifikasi, penyimpanan status)    | To Do        |
-| 17-18| S2-FE-005  | Manajemen akun kasir (CRUD user lokal oleh Admin)                      | To Do        |
-| 18-20| S2-FE-006  | Content gating (banner upsell pada laporan/pengaturan bila non-premium)| To Do        |
+| 14-15| S2-FE-003  | Role-based navigation guard (Admin vs Kasir)                           | Done         |
+| 15-17| S2-FE-004  | Aktivasi premium lokal (kode input, verifikasi, penyimpanan status)    | Done         |
+| 17-18| S2-FE-005  | Manajemen akun kasir (CRUD user lokal oleh Admin)                      | Done         |
+| 18-20| S2-FE-006  | Content gating (banner upsell pada laporan/pengaturan bila non-premium)| Done         |
 
 ---
 
@@ -79,3 +79,6 @@ Setiap sprint ≈ 10 hari kerja. Status terakhir diperbarui setelah revisi arsit
 Catatan:
 - Status akan diperbarui setiap kali task selesai.
 - Jika diperlukan buffer untuk riset monetisasi/pembayaran, sisipkan pada Sprint 5 setelah aktivasi premium stabil.
+
+
+
