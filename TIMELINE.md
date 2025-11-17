@@ -38,8 +38,8 @@ Setiap sprint ≈ 10 hari kerja. Status terakhir diperbarui setelah revisi arsit
 
 | Hari | Task ID    | Tugas                                                                  | Status |
 |------|------------|------------------------------------------------------------------------|--------|
-| 21-22| S3-FE-001  | Domain kategori & produk (CRUD use cases, validation)                  | To Do  |
-| 22-23| S3-FE-002  | Repository/DAO kategori & produk (Drift)                               | To Do  |
+| 21-22| S3-FE-001  | Domain kategori & produk (CRUD use cases, validation)                  | Done  |
+| 22-23| S3-FE-002  | Repository/DAO kategori & produk (Drift)                               | Done  |
 | 23-25| S3-UX-001  | UI kategori (list, filter, form, soft delete)                          | To Do  |
 | 25-27| S3-UX-002  | UI produk (list + search + stok minimum highlight)                     | To Do  |
 | 27-28| S3-FE-003  | Form produk (admin only), upload barcode manual                        | To Do  |
@@ -79,6 +79,7 @@ Setiap sprint ≈ 10 hari kerja. Status terakhir diperbarui setelah revisi arsit
 Catatan:
 - Status akan diperbarui setiap kali task selesai.
 - Jika diperlukan buffer untuk riset monetisasi/pembayaran, sisipkan pada Sprint 5 setelah aktivasi premium stabil.
+
 
 
 

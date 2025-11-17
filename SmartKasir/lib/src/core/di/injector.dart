@@ -7,6 +7,12 @@ import '../../features/auth/data/datasources/auth_local_data_source.dart';
 import '../../features/auth/data/datasources/user_dao.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/categories/data/datasources/category_dao.dart';
+import '../../features/categories/data/repositories/category_repository_impl.dart';
+import '../../features/categories/domain/repositories/category_repository.dart';
+import '../../features/products/data/datasources/product_dao.dart';
+import '../../features/products/data/repositories/product_repository_impl.dart';
+import '../../features/products/domain/repositories/product_repository.dart';
 import '../../features/user_management/data/repositories/user_management_repository_impl.dart';
 import '../../features/user_management/domain/repositories/user_management_repository.dart';
 import '../database/app_database.dart';
@@ -25,6 +31,12 @@ Future<void> configureDependencies() async {
   _registerLazySingleton<ActivationLocalDataSource>(
     () => ActivationLocalDataSource(serviceLocator<AppDatabase>()),
   );
+  _registerLazySingleton<CategoryDao>(
+    () => CategoryDao(serviceLocator<AppDatabase>()),
+  );
+  _registerLazySingleton<ProductDao>(
+    () => ProductDao(serviceLocator<AppDatabase>()),
+  );
   _registerLazySingleton<ActivationRepository>(
     () => ActivationRepositoryImpl(serviceLocator()),
   );
@@ -36,6 +48,15 @@ Future<void> configureDependencies() async {
   );
   _registerLazySingleton<UserManagementRepository>(
     () => UserManagementRepositoryImpl(serviceLocator()),
+  );
+  _registerLazySingleton<CategoryRepository>(
+    () => CategoryRepositoryImpl(serviceLocator()),
+  );
+  _registerLazySingleton<ProductRepository>(
+    () => ProductRepositoryImpl(
+      serviceLocator<ProductDao>(),
+      serviceLocator<CategoryDao>(),
+    ),
   );
 }
 
