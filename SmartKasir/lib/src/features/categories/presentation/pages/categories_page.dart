@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -420,13 +422,14 @@ class _CategoryTable extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: LayoutBuilder(
           builder: (context, constraints) {
+            const minTableWidth = 720.0;
             final isCompact = constraints.maxWidth < 720;
-            final tableWidth = constraints.maxWidth < 760
-                ? 760.0
-                : constraints.maxWidth;
+            final tableWidth = math.max(constraints.maxWidth, minTableWidth);
+
+            final filterWidth = math.min(200.0, constraints.maxWidth);
 
             final filterDropdown = SizedBox(
-              width: isCompact ? double.infinity : 200,
+              width: filterWidth,
               child: InputDecorator(
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
@@ -463,34 +466,22 @@ class _CategoryTable extends StatelessWidget {
               ),
             );
 
-            final headerSection = isCompact
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Daftar Kategori',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      filterDropdown,
-                    ],
-                  )
-                : Row(
-                    children: [
-                      const Text(
-                        'Daftar Kategori',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Spacer(),
-                      filterDropdown,
-                    ],
-                  );
+            final headerSection = Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                const Text(
+                  'Daftar Kategori',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(width: filterWidth, child: filterDropdown),
+              ],
+            );
 
             Widget tableBody;
             if (isLoading && items.isEmpty) {
@@ -561,55 +552,44 @@ class _TableHeader extends StatelessWidget {
         children: [
           Expanded(
             flex: 2,
-            child: Text(
-              'ID',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('ID'),
           ),
           Expanded(
             flex: 4,
-            child: Text(
-              'Nama Kategori',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('Nama Kategori'),
           ),
           Expanded(
             flex: 4,
-            child: Text(
-              'Deskripsi',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('Deskripsi'),
           ),
           Expanded(
             flex: 2,
-            child: Text(
-              'Jumlah Produk',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('Jumlah Produk'),
           ),
           SizedBox(
             width: 120,
-            child: Text(
-              'Aksi',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('Aksi'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HeaderText extends StatelessWidget {
+  const _HeaderText(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF4B5563),
       ),
     );
   }
@@ -639,26 +619,43 @@ class _TableRowItem extends StatelessWidget {
         children: [
           Expanded(
             flex: 2,
-            child: Text(
-              category.id,
-              style: const TextStyle(color: Color(0xFF6B7280)),
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Text(
-              category.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1F2430),
+            child: Tooltip(
+              message: category.id,
+              child: Text(
+                category.id,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Color(0xFF6B7280)),
               ),
             ),
           ),
           Expanded(
             flex: 4,
-            child: Text(
-              category.description ?? '-',
-              style: const TextStyle(color: Color(0xFF6B7280)),
+            child: Tooltip(
+              message: category.name,
+              child: Text(
+                category.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2430),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Tooltip(
+              message: category.description?.isNotEmpty == true
+                  ? category.description!
+                  : '-',
+              child: Text(
+                category.description ?? '-',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Color(0xFF6B7280)),
+              ),
             ),
           ),
           Expanded(

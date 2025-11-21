@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../activation/presentation/providers/activation_providers.dart';
 import '../../../activation/presentation/state/activation_state.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -14,6 +15,7 @@ class SettingsPage extends ConsumerStatefulWidget {
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _codeController = TextEditingController();
+  bool _isLoggingOut = false;
 
   @override
   void dispose() {
@@ -43,6 +45,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             _buildActivationStatusCard(context, activationState),
             const SizedBox(height: 24),
             _buildActivationForm(context, activationState),
+            const SizedBox(height: 24),
+            _buildLogoutCard(context),
           ],
         ),
       ),
@@ -230,6 +234,62 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
+  Widget _buildLogoutCard(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: const [
+                Icon(Icons.logout, color: Color(0xFFDC2626)),
+                SizedBox(width: 8),
+                Text(
+                  'Keluar Akun',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Akhiri sesi Anda di perangkat ini. Login kembali diperlukan untuk mengakses fitur premium dan data.',
+              style: TextStyle(color: Color(0xFF4B5563)),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: 160,
+              height: 44,
+              child: OutlinedButton.icon(
+                onPressed: _isLoggingOut ? null : _handleLogout,
+                icon: _isLoggingOut
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.logout),
+                label: Text(_isLoggingOut ? 'Memproses...' : 'Logout'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFDC2626),
+                  side: const BorderSide(color: Color(0xFFDC2626)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _onActivate() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -238,6 +298,48 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final notifier = ref.read(activationNotifierProvider.notifier);
     await notifier.activate(_codeController.text);
     _codeController.clear();
+  }
+
+  Future<void> _handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Anda yakin ingin keluar dari akun ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    setState(() => _isLoggingOut = true);
+    try {
+      await ref.read(authNotifierProvider.notifier).logout();
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal logout, coba lagi.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoggingOut = false);
+      }
+    }
   }
 }
 
