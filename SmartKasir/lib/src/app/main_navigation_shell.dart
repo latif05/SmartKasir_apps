@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/activation/presentation/providers/activation_providers.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
-import '../features/dashboard/presentation/pages/dashboard_page.dart';
-import '../features/categories/presentation/pages/categories_placeholder_page.dart';
+import 'package:smartkasir/src/features/dashboard/presentation/pages/dashboard_overview_page.dart';
+import '../features/categories/presentation/pages/categories_page.dart';
 import '../features/user_management/presentation/pages/user_management_page.dart';
-import '../features/products/presentation/pages/products_placeholder_page.dart';
+import '../features/products/presentation/pages/products_page.dart';
 import '../features/reports/presentation/pages/reports_placeholder_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
 import '../features/transactions/presentation/pages/transactions_placeholder_page.dart';
@@ -33,14 +33,14 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
       icon: Icons.inventory_2_outlined,
       activeIcon: Icons.inventory_2,
       label: 'Produk',
-      builder: () => const ProductsPlaceholderPage(),
+      builder: () => const ProductsPage(),
       allowedRoles: const {'admin', 'cashier'},
     ),
     _NavigationDestination(
       icon: Icons.category_outlined,
       activeIcon: Icons.category,
       label: 'Kategori',
-      builder: () => const CategoriesPlaceholderPage(),
+      builder: () => const CategoriesPage(),
       allowedRoles: const {'admin', 'cashier'},
     ),
     _NavigationDestination(
@@ -361,5 +361,7 @@ class _NavigationDestination {
   final Set<String> allowedRoles;
   final bool requiresPremium;
 }
+
+
 
 
