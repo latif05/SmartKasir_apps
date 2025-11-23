@@ -123,7 +123,8 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
         : _selectedCategory;
 
     final products = productState.products;
-    final lowStockProducts = products.where(_isLowStock).toList();
+    final lowStockProducts = products.where(_isLowStock).toList()
+      ..sort((a, b) => a.stock.compareTo(b.stock));
     final outOfStockProducts = products.where(_isOutOfStock).toList();
 
     final stockFiltered = products.where((product) {
@@ -185,6 +186,13 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
               if (!canManageProducts) ...[
                 const SizedBox(height: 12),
                 const _ViewOnlyBanner(),
+              ],
+              if (lowStockProducts.isNotEmpty || outOfStockProducts.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _StockAlertBanner(
+                  lowStockCount: lowStockProducts.length,
+                  outOfStockCount: outOfStockProducts.length,
+                ),
               ],
               const SizedBox(height: 20),
               _StockSummary(
@@ -340,6 +348,56 @@ class _ViewOnlyBanner extends StatelessWidget {
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF9A3412)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StockAlertBanner extends StatelessWidget {
+  const _StockAlertBanner({
+    required this.lowStockCount,
+    required this.outOfStockCount,
+  });
+
+  final int lowStockCount;
+  final int outOfStockCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = lowStockCount + outOfStockCount;
+    final isWarning = total > 0;
+    final text = isWarning
+        ? '$total produk perlu restock: $lowStockCount menipis / $outOfStockCount habis'
+        : 'Semua stok aman';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isWarning ? const Color(0xFFFFF7ED) : const Color(0xFFECFDF3),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isWarning ? const Color(0xFFF97316) : const Color(0xFF10B981),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isWarning ? Icons.warning_amber_rounded : Icons.check_circle,
+            color: isWarning ? const Color(0xFFF97316) : const Color(0xFF10B981),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color:
+                    isWarning ? const Color(0xFF9A3412) : const Color(0xFF047857),
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

@@ -15,7 +15,6 @@ class UpdateProduct {
     int? stock,
     int? stockMin,
     String? unit,
-    String? barcode,
     String? imageUrl,
   }) {
     if (id.trim().isEmpty) {
@@ -44,7 +43,6 @@ class UpdateProduct {
       stock: validatedStock,
       stockMin: validatedStockMin,
       unit: _trimToNull(unit),
-      barcode: _trimToNull(barcode),
       imageUrl: _trimToNull(imageUrl),
     );
   }

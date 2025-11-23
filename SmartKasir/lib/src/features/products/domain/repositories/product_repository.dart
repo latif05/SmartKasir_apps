@@ -13,7 +13,6 @@ abstract class ProductRepository {
     int? stock,
     int? stockMin,
     String? unit,
-    String? barcode,
     String? imageUrl,
   });
 
@@ -26,7 +25,6 @@ abstract class ProductRepository {
     int? stock,
     int? stockMin,
     String? unit,
-    String? barcode,
     String? imageUrl,
   });
 

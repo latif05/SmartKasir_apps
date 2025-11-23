@@ -42,9 +42,9 @@ Setiap sprint ≈ 10 hari kerja. Status terakhir diperbarui setelah revisi arsit
 | 22-23| S3-FE-002  | Repository/DAO kategori & produk (Drift)                               | Done  |
 | 23-25| S3-UX-001  | UI kategori (list, filter, form, soft delete)                          | Done  |
 | 25-27| S3-UX-002  | UI produk (list + search + stok minimum highlight)                     | Done  |
-| 27-28| S3-FE-003  | Form produk (admin only), upload barcode manual                        | To Do  |
-| 28-29| S3-FE-004  | Stok minimum notifier & dashboard widget                               | To Do  |
-| 29-30| S3-FE-005  | Integrasi scanner (opsional, placeholder)                              | To Do  |
+| 27-28| S3-FE-003  | Form produk (admin only), upload barcode manual                        | Done   |
+| 28-29| S3-FE-004  | Stok minimum notifier & dashboard widget                               | Done   |
+| 29-30| S3-FE-005  | Integrasi scanner (opsional, placeholder)                              | Canceled |
 
 ---
 
@@ -52,13 +52,13 @@ Setiap sprint ≈ 10 hari kerja. Status terakhir diperbarui setelah revisi arsit
 
 | Hari | Task ID    | Tugas                                                                  | Status |
 |------|------------|------------------------------------------------------------------------|--------|
-| 31-32| S4-FE-001  | Domain transaksi (cart, diskon, pembayaran)                            | To Do  |
-| 32-33| S4-FE-002  | Repository/DAO transaksi + item, join & histori                        | To Do  |
-| 33-35| S4-UX-001  | POS screen (pencarian produk, keranjang, ringkasan)                    | To Do  |
-| 35-36| S4-UX-002  | Payment sheet (tunai/non-tunai, kembalian)                             | To Do  |
-| 36-37| S4-FE-003  | Struk digital + share/export pdf (opsional)                            | To Do  |
-| 37-39| S4-FE-004  | Riwayat transaksi & detail (role Admin & Kasir)                        | To Do  |
-| 39-40| S4-QA-001  | Uji beban transaksi + validasi stok otomatis                           | To Do  |
+| 31-32| S4-FE-001  | Domain transaksi (cart, diskon, pembayaran)                            | Done   |
+| 32-33| S4-FE-002  | Repository/DAO transaksi + item, join & histori                        | Done   |
+| 33-35| S4-UX-001  | POS screen (pencarian produk, keranjang, ringkasan)                    | Done   |
+| 35-36| S4-UX-002  | Payment sheet (tunai/non-tunai, kembalian)                             | Done   |
+| 36-37| S4-FE-003  | Struk digital + share/export pdf (opsional)                            | Done   |
+| 37-39| S4-FE-004  | Riwayat transaksi & detail (role Admin & Kasir)                        | Done   |
+| 39-40| S4-QA-001  | Uji beban transaksi + validasi stok otomatis                           | Done   |
 
 ---
 

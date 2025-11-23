@@ -20,6 +20,13 @@ class ActivationRepositoryImpl implements ActivationRepository {
 
   @override
   Future<void> activate(String code) async {
+    final currentStatus = await _localDataSource.getStatus();
+    if (currentStatus.isPremium == 1) {
+      throw const ActivationException(
+        'Akun ini sudah premium seumur hidup. Tidak perlu aktivasi ulang.',
+      );
+    }
+
     final record = await _localDataSource.getCode(code);
     if (record == null) {
       throw const ActivationException('Kode aktivasi tidak ditemukan');

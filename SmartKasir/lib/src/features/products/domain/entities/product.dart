@@ -5,7 +5,6 @@ class Product extends Equatable {
     required this.id,
     required this.categoryId,
     required this.name,
-    this.barcode,
     required this.purchasePrice,
     required this.sellingPrice,
     required this.stock,
@@ -20,7 +19,6 @@ class Product extends Equatable {
   final String id;
   final String categoryId;
   final String name;
-  final String? barcode;
   final double purchasePrice;
   final double sellingPrice;
   final int stock;
@@ -36,7 +34,6 @@ class Product extends Equatable {
         id,
         categoryId,
         name,
-        barcode,
         purchasePrice,
         sellingPrice,
         stock,

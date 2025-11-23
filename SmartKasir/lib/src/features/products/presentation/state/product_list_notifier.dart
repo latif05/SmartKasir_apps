@@ -56,7 +56,6 @@ class ProductListNotifier extends StateNotifier<ProductListState> {
         stock: stock,
         stockMin: stockMin,
         unit: unit,
-        barcode: null,
       ),
     );
   }
@@ -81,7 +80,6 @@ class ProductListNotifier extends StateNotifier<ProductListState> {
         stock: stock,
         stockMin: stockMin,
         unit: unit,
-        barcode: null,
       ),
     );
   }

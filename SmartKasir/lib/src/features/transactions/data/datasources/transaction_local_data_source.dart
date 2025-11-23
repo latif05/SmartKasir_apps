@@ -36,6 +36,35 @@ class TransactionLocalDataSource {
     return statement.get();
   }
 
+  Future<TransactionWithItems?> fetchTransactionWithItems(String id) async {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.transactionItems,
+        _database.transactionItems.transactionId
+            .equalsExp(_database.transactions.id),
+      ),
+    ])
+      ..where(_database.transactions.id.equals(id))
+      ..where(_database.transactions.isDeleted.equals(0));
+
+    final rows = await query.get();
+    if (rows.isEmpty) return null;
+
+    final grouped = <String, TransactionWithItems>{};
+    for (final row in rows) {
+      final transaction = row.readTable(_database.transactions);
+      final item = row.readTableOrNull(_database.transactionItems);
+      grouped.putIfAbsent(
+        transaction.id,
+        () => TransactionWithItems(transaction: transaction, items: []),
+      );
+      if (item != null) {
+        grouped[transaction.id]!.items.add(item);
+      }
+    }
+    return grouped.values.first;
+  }
+
   Stream<List<TransactionWithItems>> watchTransactions() {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(

@@ -59,7 +59,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   ) {
     final isPremium = state.isPremium;
     final color = isPremium ? Colors.green : Colors.orange;
-    final statusText = isPremium ? 'Premium Aktif' : 'Belum Aktif';
+    final statusText =
+        isPremium ? 'Premium Aktif (seumur hidup)' : 'Belum Aktif';
     final activatedText = state.activatedAt != null
         ? state.activatedAt!.toLocal().toString().split('.').first
         : '-';
@@ -127,7 +128,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Buka laporan, pengaturan toko lengkap, dan fitur admin premium lainnya.',
+              'Sekali aktivasi, premium aktif selamanya. Buka laporan, pengaturan toko lengkap, dan fitur admin premium lainnya.',
               style: TextStyle(color: Color(0xFF4B5563)),
             ),
             const SizedBox(height: 12),
@@ -169,8 +170,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Masukkan kode aktivasi yang Anda dapatkan setelah pembayaran '
-                'paket premium senilai Rp30.000.',
+                'Masukkan kode aktivasi yang Anda dapatkan setelah pembayaran satu kali '
+                'paket premium senilai Rp30.000. Setelah aktif, premium berlaku permanen.',
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
@@ -329,6 +330,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     try {
       await ref.read(authNotifierProvider.notifier).logout();
     } catch (_) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Gagal logout, coba lagi.'),

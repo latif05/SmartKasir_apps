@@ -24,7 +24,6 @@ class ProductRepositoryImpl implements ProductRepository {
     int? stock,
     int? stockMin,
     String? unit,
-    String? barcode,
     String? imageUrl,
   }) async {
     await _ensureCategoryExists(categoryId);
@@ -35,7 +34,6 @@ class ProductRepositoryImpl implements ProductRepository {
         id: Value(_uuid.v4()),
         categoryId: Value(categoryId),
         name: Value(name),
-        barcode: Value(barcode),
         purchasePrice: Value(purchasePrice ?? 0),
         sellingPrice: Value(sellingPrice ?? 0),
         stock: Value(stock ?? 0),
@@ -59,7 +57,6 @@ class ProductRepositoryImpl implements ProductRepository {
     int? stock,
     int? stockMin,
     String? unit,
-    String? barcode,
     String? imageUrl,
   }) async {
     final existing = await _productDao.getById(id);
@@ -76,7 +73,6 @@ class ProductRepositoryImpl implements ProductRepository {
         id: Value(id),
         categoryId: categoryId != null ? Value(categoryId) : const Value.absent(),
         name: name != null ? Value(name) : const Value.absent(),
-        barcode: barcode != null ? Value(barcode) : const Value.absent(),
         purchasePrice: purchasePrice != null ? Value(purchasePrice) : const Value.absent(),
         sellingPrice: sellingPrice != null ? Value(sellingPrice) : const Value.absent(),
         stock: stock != null ? Value(stock) : const Value.absent(),
@@ -122,7 +118,6 @@ class ProductRepositoryImpl implements ProductRepository {
       id: row.id,
       categoryId: row.categoryId,
       name: row.name,
-      barcode: row.barcode,
       purchasePrice: row.purchasePrice,
       sellingPrice: row.sellingPrice,
       stock: row.stock,

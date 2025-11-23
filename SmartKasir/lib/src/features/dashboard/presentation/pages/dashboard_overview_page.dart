@@ -207,7 +207,7 @@ class _KpiSection extends StatelessWidget {
         title: 'Stok Perlu Aksi',
         value: '${stats.lowStockCount + stats.outOfStockCount}',
         changeLabel: stats.lowStockCount + stats.outOfStockCount > 0
-            ? '${stats.lowStockCount} menipis • ${stats.outOfStockCount} habis'
+            ? '${stats.lowStockCount} menipis / ${stats.outOfStockCount} habis'
             : 'Semua stok aman',
         changeColor: (stats.lowStockCount + stats.outOfStockCount) > 0
             ? Colors.red
@@ -501,11 +501,11 @@ class _LowStockCard extends StatelessWidget {
                 ),
               )
             else
-              ...products.map(
-                (product) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
-                    children: [
+                ...products.map(
+                  (product) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Row(
+                      children: [
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,7 +518,7 @@ class _LowStockCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Stok ${product.stock} â€¢ Minimum ${product.stockMin}',
+                              'Stok ${product.stock} | Minimum ${product.stockMin}',
                               style: const TextStyle(
                                 color: Color(0xFF6B7280),
                                 fontSize: 12,

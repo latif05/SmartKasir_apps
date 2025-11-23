@@ -423,7 +423,6 @@ class _CategoryTable extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             const minTableWidth = 720.0;
-            final isCompact = constraints.maxWidth < 720;
             final tableWidth = math.max(constraints.maxWidth, minTableWidth);
 
             final filterWidth = math.min(200.0, constraints.maxWidth);

@@ -14,7 +14,6 @@ class CreateProduct {
     int? stock,
     int? stockMin,
     String? unit,
-    String? barcode,
     String? imageUrl,
   }) {
     final trimmedCategory = categoryId.trim();
@@ -44,7 +43,6 @@ class CreateProduct {
       stock: validatedStock,
       stockMin: validatedStockMin,
       unit: _trimToNull(unit),
-      barcode: _trimToNull(barcode),
       imageUrl: _trimToNull(imageUrl),
     );
   }

@@ -9,7 +9,7 @@ import '../features/user_management/presentation/pages/user_management_page.dart
 import '../features/products/presentation/pages/products_page.dart';
 import '../features/reports/presentation/pages/reports_placeholder_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
-import '../features/transactions/presentation/pages/transactions_placeholder_page.dart';
+import '../features/transactions/presentation/pages/transactions_page.dart';
 
 class MainNavigationShell extends ConsumerStatefulWidget {
   const MainNavigationShell({super.key});
@@ -47,7 +47,7 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
       icon: Icons.shopping_cart_outlined,
       activeIcon: Icons.shopping_cart,
       label: 'Transaksi',
-      builder: () => const TransactionsPlaceholderPage(),
+      builder: () => const TransactionsPage(),
       allowedRoles: const {'admin', 'cashier'},
     ),
     _NavigationDestination(

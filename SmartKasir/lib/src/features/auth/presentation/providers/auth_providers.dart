@@ -5,6 +5,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/login_with_credentials.dart';
 import '../../domain/usecases/get_cached_user.dart';
 import '../../domain/usecases/logout.dart';
+import '../../domain/usecases/register_user.dart';
 import '../state/auth_notifier.dart';
 import '../state/auth_state.dart';
 
@@ -25,6 +26,11 @@ final getCachedUserProvider = Provider<GetCachedUser>((ref) {
 final logoutProvider = Provider<Logout>((ref) {
   final repository = ref.read(authRepositoryProvider);
   return Logout(repository);
+});
+
+final registerUserProvider = Provider<RegisterUser>((ref) {
+  final repository = ref.read(authRepositoryProvider);
+  return RegisterUser(repository);
 });
 
 final authNotifierProvider =
