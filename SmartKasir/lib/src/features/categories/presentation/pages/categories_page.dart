@@ -205,13 +205,6 @@ class _Header extends StatelessWidget {
             color: const Color(0xFF1F2430),
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Kelola kategori produk untuk memudahkan pencarian dan laporan.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF6B7280)),
-        ),
       ],
     );
 
@@ -422,7 +415,7 @@ class _CategoryTable extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            const minTableWidth = 720.0;
+            const minTableWidth = 900.0;
             final tableWidth = math.max(constraints.maxWidth, minTableWidth);
 
             final filterWidth = math.min(200.0, constraints.maxWidth);

@@ -11,18 +11,71 @@ class ProductGridPanel extends ConsumerWidget {
     required this.products,
     required this.errorMessage,
     required this.onAddToCart,
+    this.isCompact = false,
   });
 
   final bool isLoading;
   final List<Product> products;
   final String? errorMessage;
   final void Function(Product product) onAddToCart;
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final searchController = TextEditingController();
     final categories = ref.watch(categoryListNotifierProvider).categories;
     final categoryFilter = ValueNotifier<String>('all');
+
+    Widget buildList(List<Product> filtered) {
+      if (filtered.isEmpty) {
+        return const Center(child: Text('Tidak ada produk sesuai filter.'));
+      }
+
+      if (isCompact) {
+        return ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(left: 4, right: 4, bottom: 12),
+          itemCount: filtered.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (_, index) {
+            final product = filtered[index];
+            return _ProductCard(
+              product: product,
+              onAdd: () => onAddToCart(product),
+              isCompact: true,
+            );
+          },
+        );
+      }
+
+      final isWide = MediaQuery.sizeOf(context).width > 1100;
+      final crossAxisCount = isWide ? 3 : 2;
+
+      return Expanded(
+        child: GridView.builder(
+          padding: const EdgeInsets.only(
+            left: 12,
+            right: 12,
+            bottom: 12,
+          ),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.8,
+          ),
+          itemCount: filtered.length,
+          itemBuilder: (_, index) {
+            final product = filtered[index];
+            return _ProductCard(
+              product: product,
+              onAdd: () => onAddToCart(product),
+            );
+          },
+        ),
+      );
+    }
 
     return Container(
       color: const Color(0xFFF6F7FB),
@@ -35,57 +88,30 @@ class ProductGridPanel extends ConsumerWidget {
             categoryFilter: categoryFilter,
           ),
           const SizedBox(height: 12),
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : errorMessage != null
-                    ? Center(child: Text(errorMessage!))
-                    : ValueListenableBuilder<String>(
-                        valueListenable: categoryFilter,
-                        builder: (_, filter, __) {
-                          final keyword = searchController.text.toLowerCase();
-                          final filtered = products.where((p) {
-                            final matchesKeyword = keyword.isEmpty ||
-                                p.name.toLowerCase().contains(keyword);
-                            final matchesCategory =
-                                filter == 'all' || p.categoryId == filter;
-                            return matchesKeyword && matchesCategory;
-                          }).toList();
+          if (isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (errorMessage != null)
+            Center(child: Text(errorMessage!))
+          else
+            ValueListenableBuilder<String>(
+              valueListenable: categoryFilter,
+              builder: (_, filter, __) {
+                final keyword = searchController.text.toLowerCase();
+                final filtered = products.where((p) {
+                  final matchesKeyword = keyword.isEmpty ||
+                      p.name.toLowerCase().contains(keyword);
+                  final matchesCategory =
+                      filter == 'all' || p.categoryId == filter;
+                  return matchesKeyword && matchesCategory;
+                }).toList();
 
-                          if (filtered.isEmpty) {
-                            return const Center(
-                              child: Text('Tidak ada produk sesuai filter.'),
-                            );
-                          }
-
-                          final isWide = MediaQuery.sizeOf(context).width > 1100;
-                          final crossAxisCount = isWide ? 3 : 2;
-
-                          return GridView.builder(
-                            padding: const EdgeInsets.only(
-                              left: 12,
-                              right: 12,
-                              bottom: 12,
-                            ),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 1.8,
-                            ),
-                            itemCount: filtered.length,
-                            itemBuilder: (_, index) {
-                              final product = filtered[index];
-                              return _ProductCard(
-                                product: product,
-                                onAdd: () => onAddToCart(product),
-                              );
-                            },
-                          );
-                        },
-                      ),
-          ),
+                final list = buildList(filtered);
+                if (isCompact) {
+                  return list;
+                }
+                return Expanded(child: list);
+              },
+            ),
         ],
       ),
     );
@@ -162,10 +188,11 @@ class _FilterBar extends StatelessWidget {
 }
 
 class _ProductCard extends StatelessWidget {
-  const _ProductCard({required this.product, required this.onAdd});
+  const _ProductCard({required this.product, required this.onAdd, this.isCompact = false});
 
   final Product product;
   final VoidCallback onAdd;
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context) {
@@ -184,26 +211,44 @@ class _ProductCard extends StatelessWidget {
         ),
       ),
       padding: const EdgeInsets.all(12),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   product.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                    fontSize: isCompact ? 15 : 14,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(height: 4),
+                Text(
+                  _formatCurrency(product.sellingPrice),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Stok: ${product.stock}',
+                  style: const TextStyle(color: Color(0xFF6B7280)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: isOut
                       ? const Color(0xFFFFE4E6)
@@ -217,7 +262,7 @@ class _ProductCard extends StatelessWidget {
                       ? 'Habis'
                       : isLow
                           ? 'Menipis'
-                          : 'Stok ${product.stock}',
+                          : 'Aman',
                   style: TextStyle(
                     color: isOut
                         ? const Color(0xFFDC2626)
@@ -229,34 +274,26 @@ class _ProductCard extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            _formatCurrency(product.sellingPrice),
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            height: 38,
-            child: ElevatedButton.icon(
-              onPressed: isOut ? null : onAdd,
-              icon: const Icon(Icons.add_shopping_cart, size: 18),
-              label: const Text('Tambah'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6A7BFF),
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: const Color(0xFFE5E7EB),
-                disabledForegroundColor: const Color(0xFF9CA3AF),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 36,
+                child: ElevatedButton.icon(
+                  onPressed: isOut ? null : onAdd,
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Tambah'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6A7BFF),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: const Color(0xFFE5E7EB),
+                    disabledForegroundColor: const Color(0xFF9CA3AF),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),

@@ -21,58 +21,58 @@ class MainNavigationShell extends ConsumerStatefulWidget {
 class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
   int _currentIndex = 0;
 
-  static final List<_NavigationDestination> _allDestinations = [
-    _NavigationDestination(
-      icon: Icons.dashboard_outlined,
-      activeIcon: Icons.dashboard,
-      label: 'Dashboard',
-      builder: () => const DashboardPage(),
-      allowedRoles: const {'admin', 'cashier'},
-    ),
-    _NavigationDestination(
-      icon: Icons.inventory_2_outlined,
-      activeIcon: Icons.inventory_2,
-      label: 'Produk',
-      builder: () => const ProductsPage(),
-      allowedRoles: const {'admin', 'cashier'},
-    ),
-    _NavigationDestination(
-      icon: Icons.category_outlined,
-      activeIcon: Icons.category,
-      label: 'Kategori',
-      builder: () => const CategoriesPage(),
-      allowedRoles: const {'admin', 'cashier'},
-    ),
-    _NavigationDestination(
-      icon: Icons.shopping_cart_outlined,
-      activeIcon: Icons.shopping_cart,
-      label: 'Transaksi',
-      builder: () => const TransactionsPage(),
-      allowedRoles: const {'admin', 'cashier'},
-    ),
-    _NavigationDestination(
-      icon: Icons.people_outline,
-      activeIcon: Icons.people,
-      label: 'Pengguna',
-      builder: () => const UserManagementPage(),
-      allowedRoles: const {'admin'},
-      requiresPremium: true,
-    ),
-    _NavigationDestination(
-      icon: Icons.bar_chart_outlined,
-      activeIcon: Icons.bar_chart,
-      label: 'Laporan',
-      builder: () => const ReportsPlaceholderPage(),
-      allowedRoles: const {'admin'},
-    ),
-    _NavigationDestination(
-      icon: Icons.settings_outlined,
-      activeIcon: Icons.settings,
-      label: 'Pengaturan',
-      builder: () => const SettingsPage(),
-      allowedRoles: const {'admin'},
-    ),
-  ];
+  List<_NavigationDestination> get _allDestinations => [
+        _NavigationDestination(
+          icon: Icons.dashboard_outlined,
+          activeIcon: Icons.dashboard,
+          label: 'Dashboard',
+          builder: () => const DashboardPage(),
+          allowedRoles: const {'admin', 'cashier'},
+        ),
+        _NavigationDestination(
+          icon: Icons.inventory_2_outlined,
+          activeIcon: Icons.inventory_2,
+          label: 'Produk',
+          builder: () => const ProductsPage(),
+          allowedRoles: const {'admin', 'cashier'},
+        ),
+        _NavigationDestination(
+          icon: Icons.category_outlined,
+          activeIcon: Icons.category,
+          label: 'Kategori',
+          builder: () => const CategoriesPage(),
+          allowedRoles: const {'admin', 'cashier'},
+        ),
+        _NavigationDestination(
+          icon: Icons.shopping_cart_outlined,
+          activeIcon: Icons.shopping_cart,
+          label: 'Transaksi',
+          builder: () => const TransactionsPage(),
+          allowedRoles: const {'admin', 'cashier'},
+        ),
+        _NavigationDestination(
+          icon: Icons.people_outline,
+          activeIcon: Icons.people,
+          label: 'Pengguna',
+          builder: () => const UserManagementPage(),
+          allowedRoles: const {'admin'},
+          requiresPremium: true,
+        ),
+        _NavigationDestination(
+          icon: Icons.bar_chart_outlined,
+          activeIcon: Icons.bar_chart,
+          label: 'Laporan',
+          builder: () => const ReportsPlaceholderPage(),
+          allowedRoles: const {'admin'},
+        ),
+        _NavigationDestination(
+          icon: Icons.settings_outlined,
+          activeIcon: Icons.settings,
+          label: 'Pengaturan',
+          builder: () => const SettingsPage(),
+          allowedRoles: const {'admin'},
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {

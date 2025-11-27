@@ -109,30 +109,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       body: Container(
         decoration: BoxDecoration(gradient: _backgroundGradient),
         child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: 520,
-                      minHeight: constraints.maxHeight,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildCard(theme),
-                          const SizedBox(height: 16),
-                          _buildFooter(theme),
-                        ],
-                      ),
-                    ),
-                  ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildCard(theme),
+                    const SizedBox(height: 16),
+                    _buildFooter(theme),
+                  ],
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ),
       ),

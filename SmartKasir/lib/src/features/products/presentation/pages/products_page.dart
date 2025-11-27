@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,6 +8,7 @@ import 'package:smartkasir/src/features/auth/presentation/providers/auth_provide
 import 'package:smartkasir/src/features/categories/domain/entities/category.dart';
 import 'package:smartkasir/src/features/categories/presentation/providers/category_providers.dart';
 import 'package:smartkasir/src/features/products/domain/entities/product.dart';
+import 'package:smartkasir/src/features/products/presentation/state/product_list_state.dart';
 
 import '../providers/product_providers.dart';
 
@@ -103,6 +106,41 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
     }
   }
 
+  Future<void> _openAdjustStock(Product product) async {
+    final delta = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => _AdjustStockSheet(product: product),
+    );
+
+    if (delta == null) return;
+
+    final notifier = ref.read(productListNotifierProvider.notifier);
+    try {
+      await notifier.adjustStock(productId: product.id, delta: delta);
+      if (!mounted) return;
+      final msg = delta >= 0
+          ? 'Stok bertambah $delta'
+          : 'Stok berkurang ${delta.abs()}';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg)),
+      );
+    } on ArgumentError catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+      );
+    } on AppException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
@@ -170,6 +208,11 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
         )
         .toList();
 
+    final stockLogs = [...productState.logs]
+      ..sort(
+        (a, b) => b.timestamp.compareTo(a.timestamp),
+      );
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
       body: SafeArea(
@@ -217,8 +260,11 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                 onEdit: (product) =>
                     _openProductForm(categories, product: product),
                 onDelete: _deleteProduct,
+                onAdjustStock: _openAdjustStock,
                 canManage: canManageProducts,
               ),
+              const SizedBox(height: 20),
+              _StockLogCard(logs: stockLogs),
             ],
           ),
         ),
@@ -253,12 +299,7 @@ class _Header extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          'Kelola data produk, harga, dan stok dengan mudah.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF6B7280)),
-        ),
+        const SizedBox.shrink(),
       ],
     );
 
@@ -575,6 +616,143 @@ class _StockFilterChip extends StatelessWidget {
   }
 }
 
+class _StockLogCard extends StatelessWidget {
+  const _StockLogCard({required this.logs});
+
+  final List<StockLog> logs;
+
+  @override
+  Widget build(BuildContext context) {
+    final latestLogs = logs.take(20).toList();
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Riwayat Stok',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Pantau aktivitas tambah/kurang stok terbaru.',
+              style: TextStyle(color: Color(0xFF6B7280)),
+            ),
+            const SizedBox(height: 16),
+            if (latestLogs.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text('Belum ada aktivitas stok.'),
+              )
+            else
+              Column(
+                children: [
+                  ...List.generate(latestLogs.length, (index) {
+                    final log = latestLogs[index];
+                    final isIncrease = log.delta >= 0;
+                    final deltaText = '${isIncrease ? '+' : ''}${log.delta}';
+                    final deltaColor =
+                        isIncrease ? const Color(0xFF16A34A) : const Color(0xFFF97316);
+
+                    return Column(
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: isIncrease
+                                    ? const Color(0xFFE7F5ED)
+                                    : const Color(0xFFFFF4E6),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                isIncrease ? Icons.north_east : Icons.south_east,
+                                color: deltaColor,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    log.productName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _formatLogTimestamp(log.timestamp),
+                                    style: const TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  deltaText,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: deltaColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Stok: ${log.newStock}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF111827),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        if (index != latestLogs.length - 1)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: Divider(height: 1),
+                          ),
+                      ],
+                    );
+                  }),
+                  if (logs.length > latestLogs.length)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Menampilkan 20 aktivitas terbaru',
+                        style: TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ProductTable extends StatelessWidget {
   const _ProductTable({
     required this.items,
@@ -585,6 +763,7 @@ class _ProductTable extends StatelessWidget {
     required this.categoryOptions,
     required this.onEdit,
     required this.onDelete,
+    required this.onAdjustStock,
     required this.canManage,
   });
 
@@ -596,6 +775,7 @@ class _ProductTable extends StatelessWidget {
   final List<DropdownMenuItem<String>> categoryOptions;
   final void Function(Product product) onEdit;
   final void Function(Product product) onDelete;
+  final void Function(Product product) onAdjustStock;
   final bool canManage;
 
   @override
@@ -607,10 +787,9 @@ class _ProductTable extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final isCompact = constraints.maxWidth < 760;
-            final tableWidth = constraints.maxWidth < 800
-                ? 800.0
-                : constraints.maxWidth;
+            const minTableWidth = 900.0;
+            final isCompact = constraints.maxWidth < minTableWidth;
+            final tableWidth = math.max(constraints.maxWidth, minTableWidth);
 
             final dropdown = SizedBox(
               width: isCompact ? double.infinity : 220,
@@ -690,6 +869,7 @@ class _ProductTable extends StatelessWidget {
                         item: item,
                         onEdit: () => onEdit(item.product),
                         onDelete: () => onDelete(item.product),
+                        onAdjust: () => onAdjustStock(item.product),
                         canManage: canManage,
                       ),
                     )
@@ -750,63 +930,27 @@ class _TableHeader extends StatelessWidget {
         children: [
           const Expanded(
             flex: 2,
-            child: Text(
-              'ID',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('ID'),
           ),
           const Expanded(
             flex: 4,
-            child: Text(
-              'Nama Produk',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('Nama Produk'),
           ),
           const Expanded(
             flex: 3,
-            child: Text(
-              'Kategori',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('Kategori'),
           ),
           const Expanded(
             flex: 3,
-            child: Text(
-              'Harga Beli',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('Harga Beli'),
           ),
           const Expanded(
             flex: 3,
-            child: Text(
-              'Harga Jual',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('Harga Jual'),
           ),
           const Expanded(
             flex: 2,
-            child: Text(
-              'Stok',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4B5563),
-              ),
-            ),
+            child: _HeaderText('Stok'),
           ),
           SizedBox(
             width: 120,
@@ -825,17 +969,38 @@ class _TableHeader extends StatelessWidget {
   }
 }
 
+class _HeaderText extends StatelessWidget {
+  const _HeaderText(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF4B5563),
+      ),
+    );
+  }
+}
+
 class _TableRowItem extends StatelessWidget {
   const _TableRowItem({
     required this.item,
     required this.onEdit,
     required this.onDelete,
+    required this.onAdjust,
     required this.canManage,
   });
 
   final _ProductRowData item;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onAdjust;
   final bool canManage;
 
   @override
@@ -857,6 +1022,8 @@ class _TableRowItem extends StatelessWidget {
             flex: 2,
             child: Text(
               item.id,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Color(0xFF6B7280)),
             ),
           ),
@@ -864,6 +1031,8 @@ class _TableRowItem extends StatelessWidget {
             flex: 4,
             child: Text(
               item.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF1F2430),
@@ -874,6 +1043,8 @@ class _TableRowItem extends StatelessWidget {
             flex: 3,
             child: Text(
               item.categoryName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Color(0xFF6B7280)),
             ),
           ),
@@ -927,17 +1098,23 @@ class _TableRowItem extends StatelessWidget {
             ),
           ),
           SizedBox(
-            width: 120,
+            width: canManage ? 110 : 70,
             child: canManage
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                ? Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 6,
                     children: [
+                      _ActionChip(
+                        icon: Icons.inventory_2_outlined,
+                        color: const Color(0xFF0EA5E9),
+                        onTap: onAdjust,
+                      ),
                       _ActionChip(
                         icon: Icons.edit_outlined,
                         color: const Color(0xFF5B5BD6),
                         onTap: onEdit,
                       ),
-                      const SizedBox(width: 10),
                       _ActionChip(
                         icon: Icons.delete_outline,
                         color: const Color(0xFFF87171),
@@ -1026,7 +1203,6 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
   late final TextEditingController _purchaseController;
   late final TextEditingController _sellingController;
   late final TextEditingController _stockController;
-  late final TextEditingController _stockMinController;
   late final TextEditingController _unitController;
   String? _selectedCategoryId;
   bool _isSubmitting = false;
@@ -1051,9 +1227,6 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
     _stockController = TextEditingController(
       text: _intToText(widget.initial?.stock),
     );
-    _stockMinController = TextEditingController(
-      text: _intToText(widget.initial?.stockMin),
-    );
     _unitController = TextEditingController(text: widget.initial?.unit ?? '');
   }
 
@@ -1063,7 +1236,6 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
     _purchaseController.dispose();
     _sellingController.dispose();
     _stockController.dispose();
-    _stockMinController.dispose();
     _unitController.dispose();
     super.dispose();
   }
@@ -1086,7 +1258,7 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
     final purchase = _parseDouble(_purchaseController.text);
     final selling = _parseDouble(_sellingController.text);
     final stock = _parseInt(_stockController.text);
-    final stockMin = _parseInt(_stockMinController.text);
+    final stockMin = widget.initial?.stockMin ?? 2;
     final unit = _trimToNull(_unitController.text);
 
     try {
@@ -1145,147 +1317,147 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
       );
     }
 
-    return AlertDialog(
-      title: Text(_isEdit ? 'Ubah Produk' : 'Tambah Produk'),
-      content: Form(
-        key: _formKey,
-        child: SizedBox(
-          width: 520,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    final form = Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            controller: _nameController,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Nama Produk',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Nama produk wajib diisi';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedCategoryId,
+            decoration: const InputDecoration(
+              labelText: 'Kategori',
+              border: OutlineInputBorder(),
+            ),
+            items: dropdownItems,
+            onChanged: (value) {
+              setState(() {
+                _selectedCategoryId = value;
+              });
+            },
+            validator: (_) {
+              if (_selectedCategoryId == null || _selectedCategoryId!.isEmpty) {
+                return 'Kategori wajib dipilih';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          Row(
             children: [
-              TextFormField(
-                controller: _nameController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Produk',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Nama produk wajib diisi';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedCategoryId,
-                decoration: const InputDecoration(
-                  labelText: 'Kategori',
-                  border: OutlineInputBorder(),
-                ),
-                items: dropdownItems,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategoryId = value;
-                  });
-                },
-                validator: (_) {
-                  if (_selectedCategoryId == null ||
-                      _selectedCategoryId!.isEmpty) {
-                    return 'Kategori wajib dipilih';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _purchaseController,
-                      decoration: const InputDecoration(
-                        labelText: 'Harga Beli',
-                        border: OutlineInputBorder(),
-                        prefixText: 'Rp ',
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
+              Expanded(
+                child: TextFormField(
+                  controller: _purchaseController,
+                  decoration: const InputDecoration(
+                    labelText: 'Harga Beli',
+                    border: OutlineInputBorder(),
+                    prefixText: 'Rp ',
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _sellingController,
-                      decoration: const InputDecoration(
-                        labelText: 'Harga Jual',
-                        border: OutlineInputBorder(),
-                        prefixText: 'Rp ',
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _stockController,
-                      decoration: const InputDecoration(
-                        labelText: 'Stok',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _stockMinController,
-                      decoration: const InputDecoration(
-                        labelText: 'Stok Minimal',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _unitController,
-                decoration: const InputDecoration(
-                  labelText: 'Satuan',
-                  border: OutlineInputBorder(),
+                  keyboardType: TextInputType.number,
                 ),
               ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.red),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _sellingController,
+                  decoration: const InputDecoration(
+                    labelText: 'Harga Jual',
+                    border: OutlineInputBorder(),
+                    prefixText: 'Rp ',
                   ),
+                  keyboardType: TextInputType.number,
                 ),
-              ],
+              ),
             ],
           ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isSubmitting
-              ? null
-              : () => Navigator.of(context).pop(false),
-          child: const Text('Batal'),
-        ),
-        FilledButton(
-          onPressed: _isSubmitting ? null : _handleSubmit,
-          child: _isSubmitting
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _stockController,
+                  decoration: const InputDecoration(
+                    labelText: 'Stok',
+                    border: OutlineInputBorder(),
                   ),
-                )
-              : Text(_isEdit ? 'Simpan Perubahan' : 'Simpan'),
-        ),
-      ],
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _unitController,
+            decoration: const InputDecoration(
+              labelText: 'Satuan',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                _error!,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.clamp(320.0, 520.0);
+        final content = SizedBox(
+          width: width,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: form,
+          ),
+        );
+
+        return AlertDialog(
+          title: Text(_isEdit ? 'Ubah Produk' : 'Tambah Produk'),
+          content: content,
+          actions: [
+            TextButton(
+              onPressed: _isSubmitting
+                  ? null
+                  : () => Navigator.of(context).pop(false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: _isSubmitting ? null : _handleSubmit,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(_isEdit ? 'Simpan Perubahan' : 'Simpan'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1350,6 +1522,159 @@ class _ConfirmDeleteDialog extends StatelessWidget {
       ],
     );
   }
+}
+
+class _AdjustStockSheet extends StatefulWidget {
+  const _AdjustStockSheet({required this.product});
+
+  final Product product;
+
+  @override
+  State<_AdjustStockSheet> createState() => _AdjustStockSheetState();
+}
+
+class _AdjustStockSheetState extends State<_AdjustStockSheet> {
+  final TextEditingController _qtyController = TextEditingController(text: '1');
+  bool _isAdding = true;
+  String? _error;
+
+  @override
+  void dispose() {
+    _qtyController.dispose();
+    super.dispose();
+  }
+
+  int _parseQty() {
+    final value = int.tryParse(_qtyController.text) ?? 0;
+    return value < 0 ? 0 : value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final product = widget.product;
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 50,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5E7EB),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Atur Stok - ${product.name}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Stok sekarang: ${product.stock}',
+              style: const TextStyle(color: Color(0xFF6B7280)),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                ChoiceChip(
+                  label: const Text('Tambah'),
+                  selected: _isAdding,
+                  onSelected: (_) => setState(() => _isAdding = true),
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('Kurangi'),
+                  selected: !_isAdding,
+                  onSelected: (_) => setState(() => _isAdding = false),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _qtyController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Jumlah',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _error!,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ],
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 46,
+              child: ElevatedButton(
+                onPressed: () {
+                  final qty = _parseQty();
+                  if (qty <= 0) {
+                    setState(() => _error = 'Jumlah harus lebih dari 0');
+                    return;
+                  }
+                  final delta = _isAdding ? qty : -qty;
+                  Navigator.of(context).pop(delta);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6A7BFF),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Simpan',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _formatLogTimestamp(DateTime timestamp) {
+  final local = timestamp.toLocal();
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
+  ];
+  final day = local.day.toString().padLeft(2, '0');
+  final month = months[local.month - 1];
+  final hour = local.hour.toString().padLeft(2, '0');
+  final minute = local.minute.toString().padLeft(2, '0');
+  return '$day $month ${local.year} $hour:$minute';
 }
 
 String _formatCurrency(double value) {

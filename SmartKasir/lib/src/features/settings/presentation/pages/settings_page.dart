@@ -34,6 +34,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         title: const Text('Pengaturan'),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
+        actions: [
+          IconButton(
+            onPressed: _isLoggingOut
+                ? null
+                : () => _handleLogout(fromAppBar: true),
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -301,7 +310,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     _codeController.clear();
   }
 
-  Future<void> _handleLogout() async {
+  Future<void> _handleLogout({bool fromAppBar = false}) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

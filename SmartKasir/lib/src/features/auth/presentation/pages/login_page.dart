@@ -62,31 +62,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       body: Container(
         decoration: BoxDecoration(gradient: _backgroundGradient),
         child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: 420,
-                      minHeight: constraints.maxHeight,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildLoginCard(context, authState),
-                          const SizedBox(height: 24),
-                          _buildFooterNote(context),
-                        ],
-                      ),
-                    ),
-                  ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildLoginCard(context, authState),
+                    const SizedBox(height: 24),
+                    _buildFooterNote(context),
+                  ],
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ),
       ),
@@ -365,31 +356,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
-        RichText(
-          text: TextSpan(
-            text: 'Belum punya akun? ',
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
-            children: [
-              WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const RegisterPage()),
-                    );
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.zero,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Belum punya akun? ',
+              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (ctx) => const RegisterPage(),
                   ),
-                  child: const Text(
-                    'Daftar sekarang',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
+                );
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.zero,
               ),
-            ],
-          ),
+              child: const Text(
+                'Daftar sekarang',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
       ],
     );
