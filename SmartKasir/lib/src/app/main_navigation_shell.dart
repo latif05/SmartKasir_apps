@@ -62,7 +62,7 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
           icon: Icons.bar_chart_outlined,
           activeIcon: Icons.bar_chart,
           label: 'Laporan',
-          builder: () => const ReportsPlaceholderPage(),
+          builder: () => const ReportsPage(),
           allowedRoles: const {'admin'},
         ),
         _NavigationDestination(

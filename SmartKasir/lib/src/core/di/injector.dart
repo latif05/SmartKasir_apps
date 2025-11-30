@@ -13,6 +13,12 @@ import '../../features/categories/domain/repositories/category_repository.dart';
 import '../../features/products/data/datasources/product_dao.dart';
 import '../../features/products/data/repositories/product_repository_impl.dart';
 import '../../features/products/domain/repositories/product_repository.dart';
+import '../../features/reports/data/datasources/report_dao.dart';
+import '../../features/reports/data/repositories/report_repository_impl.dart';
+import '../../features/reports/domain/repositories/report_repository.dart';
+import '../../features/settings/data/datasources/settings_local_data_source.dart';
+import '../../features/settings/data/repositories/settings_repository_impl.dart';
+import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/transactions/data/datasources/transaction_local_data_source.dart';
 import '../../features/transactions/data/repositories/transaction_repository_impl.dart';
 import '../../features/transactions/domain/repositories/transaction_repository.dart';
@@ -40,6 +46,12 @@ Future<void> configureDependencies() async {
   _registerLazySingleton<ProductDao>(
     () => ProductDao(serviceLocator<AppDatabase>()),
   );
+  _registerLazySingleton<ReportDao>(
+    () => ReportDao(serviceLocator<AppDatabase>()),
+  );
+  _registerLazySingleton<SettingsLocalDataSource>(
+    () => SettingsLocalDataSource(serviceLocator<AppDatabase>()),
+  );
   _registerLazySingleton<TransactionLocalDataSource>(
     () => TransactionLocalDataSource(serviceLocator<AppDatabase>()),
   );
@@ -62,6 +74,16 @@ Future<void> configureDependencies() async {
     () => ProductRepositoryImpl(
       serviceLocator<ProductDao>(),
       serviceLocator<CategoryDao>(),
+    ),
+  );
+  _registerLazySingleton<ReportRepository>(
+    () => ReportRepositoryImpl(
+      serviceLocator<ReportDao>(),
+    ),
+  );
+  _registerLazySingleton<SettingsRepository>(
+    () => SettingsRepositoryImpl(
+      serviceLocator<SettingsLocalDataSource>(),
     ),
   );
   _registerLazySingleton<TransactionRepository>(
