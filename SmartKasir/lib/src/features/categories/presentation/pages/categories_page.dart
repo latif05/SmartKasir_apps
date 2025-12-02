@@ -543,15 +543,11 @@ class _TableHeader extends StatelessWidget {
       child: const Row(
         children: [
           Expanded(
-            flex: 2,
-            child: _HeaderText('ID'),
-          ),
-          Expanded(
-            flex: 4,
+            flex: 5,
             child: _HeaderText('Nama Kategori'),
           ),
           Expanded(
-            flex: 4,
+            flex: 5,
             child: _HeaderText('Deskripsi'),
           ),
           Expanded(
@@ -610,19 +606,7 @@ class _TableRowItem extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            flex: 2,
-            child: Tooltip(
-              message: category.id,
-              child: Text(
-                category.id,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFF6B7280)),
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 4,
+            flex: 5,
             child: Tooltip(
               message: category.name,
               child: Text(
@@ -637,7 +621,7 @@ class _TableRowItem extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 4,
+            flex: 5,
             child: Tooltip(
               message: category.description?.isNotEmpty == true
                   ? category.description!

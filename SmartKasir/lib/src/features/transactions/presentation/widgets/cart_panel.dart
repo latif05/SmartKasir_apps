@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../domain/entities/cart.dart';
 import '../../domain/entities/discount.dart';
@@ -274,6 +275,7 @@ class _PaymentSectionState extends State<_PaymentSection> {
   final _discountNominalController = TextEditingController();
   final _discountPercentController = TextEditingController();
   final _amountPaidController = TextEditingController();
+  bool _isFormattingAmount = false;
 
   @override
   void initState() {
@@ -286,8 +288,9 @@ class _PaymentSectionState extends State<_PaymentSection> {
         widget.cart.discountType == DiscountType.percentage
             ? widget.cart.discountValue.toString()
             : '';
-    _amountPaidController.text =
-        widget.cart.amountPaid > 0 ? widget.cart.amountPaid.toString() : '';
+    _amountPaidController.text = widget.cart.amountPaid > 0
+        ? _formatNumber(widget.cart.amountPaid.round())
+        : '';
   }
 
   @override
@@ -296,6 +299,24 @@ class _PaymentSectionState extends State<_PaymentSection> {
     _discountPercentController.dispose();
     _amountPaidController.dispose();
     super.dispose();
+  }
+
+  void _handleAmountChanged(String raw) {
+    if (_isFormattingAmount) return;
+    _isFormattingAmount = true;
+
+    final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    final amount = int.tryParse(digits) ?? 0;
+    widget.onAmountPaid(amount.toDouble());
+
+    final formatted = digits.isEmpty ? '' : _formatNumber(amount);
+    _amountPaidController.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+
+    setState(() {});
+    _isFormattingAmount = false;
   }
 
   @override
@@ -363,17 +384,14 @@ class _PaymentSectionState extends State<_PaymentSection> {
         TextField(
           controller: _amountPaidController,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           decoration: const InputDecoration(
             labelText: 'Jumlah Bayar',
             prefixText: 'Rp ',
             border: OutlineInputBorder(),
             isDense: true,
           ),
-          onChanged: (value) {
-            final amount = double.tryParse(value) ?? 0;
-            widget.onAmountPaid(amount);
-            setState(() {});
-          },
+          onChanged: _handleAmountChanged,
         ),
         const SizedBox(height: 10),
         _SummaryRow(label: 'Subtotal', value: _formatCurrency(cart.subtotal)),
@@ -451,4 +469,14 @@ String _formatCurrency(double value) {
     (match) => '${match.group(1)}.',
   );
   return 'Rp $formatted';
+}
+
+String _formatNumber(int value) {
+  final text = value.toString();
+  final regex = RegExp(r'(\d)(?=(\d{3})+(?!\d))');
+  final formatted = text.replaceAllMapped(
+    regex,
+    (match) => '${match.group(1)}.',
+  );
+  return formatted;
 }
