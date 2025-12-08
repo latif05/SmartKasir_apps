@@ -642,7 +642,6 @@ class _CompactPosView extends StatefulWidget {
 class _CompactPosViewState extends State<_CompactPosView> {
   late final TextEditingController _searchController;
   final ValueNotifier<String> _keyword = ValueNotifier<String>('');
-  final TextEditingController _amountController = TextEditingController();
 
   @override
   void initState() {
@@ -655,7 +654,6 @@ class _CompactPosViewState extends State<_CompactPosView> {
   void dispose() {
     _searchController.dispose();
     _keyword.dispose();
-    _amountController.dispose();
     super.dispose();
   }
 
@@ -759,12 +757,8 @@ class _CompactPosViewState extends State<_CompactPosView> {
             onDiscountNominal: widget.onDiscountNominal,
             onDiscountPercent: widget.onDiscountPercent,
             onPaymentMethod: widget.onPaymentMethod,
-            onAmountPaid: (amount) {
-              widget.onAmountPaid(amount);
-              _amountController.text = amount > 0 ? amount.toString() : '';
-            },
+            onAmountPaid: widget.onAmountPaid,
             onSubmitPayment: widget.onSubmitPayment,
-            amountController: _amountController,
           ),
         ],
       ),
@@ -782,7 +776,6 @@ class _CompactCartSummary extends StatefulWidget {
     required this.onPaymentMethod,
     required this.onAmountPaid,
     required this.onSubmitPayment,
-    required this.amountController,
   });
 
   final Cart cart;
@@ -793,7 +786,6 @@ class _CompactCartSummary extends StatefulWidget {
   final void Function(String) onPaymentMethod;
   final void Function(double) onAmountPaid;
   final VoidCallback onSubmitPayment;
-  final TextEditingController amountController;
 
   @override
   State<_CompactCartSummary> createState() => _CompactCartSummaryState();
@@ -804,19 +796,25 @@ class _CompactCartSummaryState extends State<_CompactCartSummary> {
   Widget build(BuildContext context) {
     final cart = widget.cart;
     final hasItems = cart.items.isNotEmpty;
+    if (hasItems && cart.amountPaid != cart.total) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onAmountPaid(cart.total);
+      });
+    } else if (!hasItems && cart.amountPaid != 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onAmountPaid(0);
+      });
+    }
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Ringkasan',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-            ),
-            const SizedBox(height: 8),
             if (!hasItems)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
@@ -839,6 +837,13 @@ class _CompactCartSummaryState extends State<_CompactCartSummary> {
                             Text(
                               _formatCurrency(item.price),
                               style: const TextStyle(color: Color(0xFF6B7280)),
+                            ),
+                            Text(
+                              'Stok: ${item.availableStock}',
+                              style: const TextStyle(
+                                color: Color(0xFF9CA3AF),
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
@@ -907,19 +912,6 @@ class _CompactCartSummaryState extends State<_CompactCartSummary> {
               },
             ),
             const SizedBox(height: 8),
-            TextField(
-              controller: widget.amountController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Bayar',
-                prefixText: 'Rp ',
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-              onChanged: (v) =>
-                  widget.onAmountPaid(double.tryParse(v) ?? 0),
-            ),
-            const SizedBox(height: 8),
             _SummaryRow(
               label: 'Subtotal',
               value: _formatCurrency(cart.subtotal),
@@ -948,16 +940,16 @@ class _CompactCartSummaryState extends State<_CompactCartSummary> {
                   backgroundColor: const Color(0xFF0B5ED7),
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: const Color(0xFFE5E7EB),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'Bayar (${_formatCurrency(cart.total)})',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
+              child: Text(
+                'Bayar ${_formatCurrency(cart.total)}',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
             ),
+          ),
           ],
         ),
       ),
