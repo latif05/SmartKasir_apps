@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smartkasir/src/features/categories/presentation/providers/category_providers.dart';
 import 'package:smartkasir/src/features/products/domain/entities/product.dart';
 import 'package:smartkasir/src/features/products/presentation/providers/product_providers.dart';
+import 'package:smartkasir/src/features/transactions/domain/entities/transaction_record.dart';
+import 'package:smartkasir/src/features/transactions/presentation/providers/transaction_providers.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -12,6 +14,8 @@ class DashboardPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final productState = ref.watch(productListNotifierProvider);
     final categoryState = ref.watch(categoryListNotifierProvider);
+    final transactionsFuture =
+        ref.watch(getTransactionsProvider).call(limit: 50);
 
     final products = productState.products;
     final activeCategories = categoryState.categories
@@ -23,35 +27,74 @@ class DashboardPage extends ConsumerWidget {
         .where((product) => product.stock == 0)
         .length;
 
-    final stats = _DashboardStats(
-      totalProducts: products.length,
-      totalCategories: activeCategories.length,
-      lowStockCount: lowStockProducts.length,
-      outOfStockCount: outOfStockCount,
-      lowStockProducts: lowStockProducts.take(6).toList(),
-    );
-
     final theme = Theme.of(context);
     final isWide = MediaQuery.sizeOf(context).width >= 1100;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _TopBar(theme: theme),
-              const SizedBox(height: 24),
-              _KpiSection(isWide: isWide, stats: stats),
-              const SizedBox(height: 24),
-              _BottomSection(
-                isWide: isWide,
-                lowStockProducts: stats.lowStockProducts,
+        child: FutureBuilder<List<TransactionRecord>>(
+          future: transactionsFuture,
+          builder: (context, snapshot) {
+            final isLoading = productState.isLoading ||
+                categoryState.isLoading ||
+                snapshot.connectionState == ConnectionState.waiting;
+
+            if (isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (productState.errorMessage != null ||
+                categoryState.errorMessage != null ||
+                snapshot.hasError) {
+              return Center(
+                child: Text(
+                  productState.errorMessage ??
+                      categoryState.errorMessage ??
+                      'Gagal memuat data dashboard',
+                ),
+              );
+            }
+
+            final transactions = (snapshot.data ?? [])
+              ..sort((a, b) => b.date.compareTo(a.date));
+            final today = DateTime.now();
+            final todayCount =
+                transactions.where((trx) => _isSameDay(trx.date, today)).length;
+            final totalSales = transactions.fold<double>(
+              0,
+              (sum, trx) => sum + trx.finalAmount,
+            );
+
+            final stats = _DashboardStats(
+              totalProducts: products.length,
+              totalCategories: activeCategories.length,
+              lowStockCount: lowStockProducts.length,
+              outOfStockCount: outOfStockCount,
+              lowStockProducts: lowStockProducts.take(6).toList(),
+              totalSales: totalSales,
+              todayTransactions: todayCount,
+              latestTransactions: transactions.take(5).toList(),
+            );
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _TopBar(theme: theme),
+                  const SizedBox(height: 24),
+                  _KpiSection(isWide: isWide, stats: stats),
+                  const SizedBox(height: 24),
+                  _BottomSection(
+                    isWide: isWide,
+                    lowStockProducts: stats.lowStockProducts,
+                    latestTransactions: stats.latestTransactions,
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -65,6 +108,9 @@ class _DashboardStats {
     required this.lowStockCount,
     required this.outOfStockCount,
     required this.lowStockProducts,
+    required this.totalSales,
+    required this.todayTransactions,
+    required this.latestTransactions,
   });
 
   final int totalProducts;
@@ -72,6 +118,9 @@ class _DashboardStats {
   final int lowStockCount;
   final int outOfStockCount;
   final List<Product> lowStockProducts;
+  final double totalSales;
+  final int todayTransactions;
+  final List<TransactionRecord> latestTransactions;
 }
 
 class _TopBar extends StatelessWidget {
@@ -182,19 +231,27 @@ class _KpiSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cards = [
-      const _KpiCard(
+      _KpiCard(
         title: 'Total Penjualan',
-        value: 'Rp 15.500.000',
-        changeLabel: '12% dari bulan lalu',
-        changeColor: Color(0xFF10B981),
-        changeIcon: Icons.arrow_upward,
+        value: _formatCurrency(stats.totalSales),
+        changeLabel: stats.totalSales > 0
+            ? 'Data penjualan tersimpan'
+            : 'Belum ada transaksi',
+        changeColor:
+            stats.totalSales > 0 ? const Color(0xFF10B981) : const Color(0xFF6B7280),
+        changeIcon: stats.totalSales > 0 ? Icons.arrow_upward : Icons.info_outline,
       ),
-      const _KpiCard(
+      _KpiCard(
         title: 'Transaksi Hari Ini',
-        value: '147',
-        changeLabel: '8 transaksi',
-        changeColor: Color(0xFF10B981),
-        changeIcon: Icons.arrow_upward,
+        value: '${stats.todayTransactions}',
+        changeLabel: stats.todayTransactions > 0
+            ? '${stats.todayTransactions} transaksi'
+            : 'Belum ada transaksi',
+        changeColor: stats.todayTransactions > 0
+            ? const Color(0xFF10B981)
+            : const Color(0xFF6B7280),
+        changeIcon:
+            stats.todayTransactions > 0 ? Icons.arrow_upward : Icons.info_outline,
       ),
       _KpiCard(
         title: 'Total Produk',
@@ -321,10 +378,15 @@ class _KpiCard extends StatelessWidget {
 }
 
 class _BottomSection extends StatelessWidget {
-  const _BottomSection({required this.isWide, required this.lowStockProducts});
+  const _BottomSection({
+    required this.isWide,
+    required this.lowStockProducts,
+    required this.latestTransactions,
+  });
 
   final bool isWide;
   final List<Product> lowStockProducts;
+  final List<TransactionRecord> latestTransactions;
 
   @override
   Widget build(BuildContext context) {
@@ -332,7 +394,9 @@ class _BottomSection extends StatelessWidget {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Expanded(child: _LatestTransactionsCard()),
+          Expanded(
+            child: _LatestTransactionsCard(transactions: latestTransactions),
+          ),
           const SizedBox(width: 20),
           Expanded(child: _LowStockCard(products: lowStockProducts)),
         ],
@@ -341,7 +405,7 @@ class _BottomSection extends StatelessWidget {
 
     return Column(
       children: [
-        const _LatestTransactionsCard(),
+        _LatestTransactionsCard(transactions: latestTransactions),
         const SizedBox(height: 20),
         _LowStockCard(products: lowStockProducts),
       ],
@@ -350,34 +414,9 @@ class _BottomSection extends StatelessWidget {
 }
 
 class _LatestTransactionsCard extends StatelessWidget {
-  const _LatestTransactionsCard();
+  const _LatestTransactionsCard({required this.transactions});
 
-  final List<Map<String, String>> _transactions = const [
-    {
-      'id': '#TRX-1032',
-      'date': '21 Nov 2025',
-      'total': 'Rp 185.000',
-      'status': 'Selesai',
-    },
-    {
-      'id': '#TRX-1031',
-      'date': '21 Nov 2025',
-      'total': 'Rp 98.000',
-      'status': 'Selesai',
-    },
-    {
-      'id': '#TRX-1030',
-      'date': '20 Nov 2025',
-      'total': 'Rp 242.000',
-      'status': 'Selesai',
-    },
-    {
-      'id': '#TRX-1029',
-      'date': '20 Nov 2025',
-      'total': 'Rp 75.000',
-      'status': 'Draft',
-    },
-  ];
+  final List<TransactionRecord> transactions;
 
   @override
   Widget build(BuildContext context) {
@@ -394,7 +433,13 @@ class _LatestTransactionsCard extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            ..._transactions.map((trx) => _TransactionRow(trx: trx)),
+            if (transactions.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('Belum ada transaksi.'),
+              )
+            else
+              ...transactions.map((trx) => _TransactionRow(trx: trx)),
           ],
         ),
       ),
@@ -405,7 +450,7 @@ class _LatestTransactionsCard extends StatelessWidget {
 class _TransactionRow extends StatelessWidget {
   const _TransactionRow({required this.trx});
 
-  final Map<String, String> trx;
+  final TransactionRecord trx;
 
   @override
   Widget build(BuildContext context) {
@@ -416,13 +461,13 @@ class _TransactionRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: Text(trx['id']!)),
-          Expanded(child: Text(trx['date']!)),
-          Expanded(child: Text(trx['total']!)),
+          Expanded(child: Text(trx.code ?? trx.id.substring(0, 8).toUpperCase())),
+          Expanded(child: Text(_formatShortDate(trx.date))),
+          Expanded(child: Text(_formatCurrency(trx.finalAmount))),
           Expanded(
             child: Align(
               alignment: Alignment.centerLeft,
-              child: _StatusBadge(label: trx['status']!),
+              child: _StatusBadge(label: trx.status),
             ),
           ),
         ],
@@ -558,6 +603,42 @@ class _LowStockCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatCurrency(double value) {
+  final intValue = value.round();
+  final text = intValue.toString();
+  final regex = RegExp(r'(\d)(?=(\d{3})+(?!\d))');
+  final formatted = text.replaceAllMapped(
+    regex,
+    (match) => '${match.group(1)}.',
+  );
+  return 'Rp $formatted';
+}
+
+String _formatShortDate(DateTime date) {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
+  ];
+  final day = date.day.toString().padLeft(2, '0');
+  final month = months[date.month - 1];
+  final year = date.year.toString();
+  return '$day $month $year';
+}
+
+bool _isSameDay(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
 bool _isLowStock(Product product) {
