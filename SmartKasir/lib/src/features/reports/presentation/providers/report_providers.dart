@@ -7,10 +7,12 @@ import '../../domain/usecases/get_daily_report.dart';
 import '../../domain/usecases/get_low_stock_report.dart';
 import '../../domain/usecases/get_periodic_report.dart';
 import '../../domain/usecases/get_top_products_report.dart';
+import '../../domain/usecases/get_stock_summary.dart';
 import '../../domain/entities/sales_summary.dart';
 import '../../domain/entities/top_product.dart';
 import '../../domain/entities/stock_alert.dart';
 import '../../domain/entities/daily_sales.dart';
+import '../../domain/entities/stock_summary.dart';
 import '../../domain/usecases/get_daily_trend.dart';
 
 final reportDaoProvider = Provider<ReportDao>((ref) {
@@ -39,6 +41,11 @@ final getTopProductsReportProvider = Provider<GetTopProductsReport>((ref) {
 final getLowStockReportProvider = Provider<GetLowStockReport>((ref) {
   final repository = ref.read(reportRepositoryProvider);
   return GetLowStockReport(repository);
+});
+
+final getStockSummaryProvider = Provider<GetStockSummary>((ref) {
+  final repository = ref.read(reportRepositoryProvider);
+  return GetStockSummary(repository);
 });
 
 final getDailyTrendProvider = Provider<GetDailyTrend>((ref) {
@@ -90,4 +97,10 @@ final dailyTrendReportFutureProvider =
   final end = _todayDate().add(const Duration(hours: 23, minutes: 59, seconds: 59));
   final start = end.subtract(const Duration(days: 29));
   return usecase(start: start, end: end);
+});
+
+final stockSummaryReportFutureProvider =
+    FutureProvider.autoDispose<StockSummary>((ref) {
+  final usecase = ref.read(getStockSummaryProvider);
+  return usecase();
 });

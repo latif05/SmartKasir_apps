@@ -6,14 +6,57 @@ import '../../../settings/presentation/pages/settings_page.dart';
 import '../../domain/entities/sales_summary.dart';
 import '../../domain/entities/top_product.dart';
 import '../../domain/entities/stock_alert.dart';
-import '../../domain/entities/daily_sales.dart';
 import '../providers/report_providers.dart';
 
-class ReportsPage extends ConsumerWidget {
+class ReportsPage extends ConsumerStatefulWidget {
   const ReportsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ReportsPage> createState() => _ReportsPageState();
+}
+
+class _ReportsPageState extends ConsumerState<ReportsPage> {
+  DateTimeRange? _customRange;
+  Future<SalesSummary>? _customSummaryFuture;
+  Future<List<TopProduct>>? _customTopFuture;
+
+  Future<void> _pickRange() async {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 1),
+      initialDateRange: _customRange ??
+          DateTimeRange(
+            start: startOfMonth,
+            end: now,
+          ),
+    );
+    if (picked == null) return;
+    setState(() {
+      _customRange = picked;
+      _customSummaryFuture = ref
+          .read(getPeriodicReportProvider)
+          .call(start: picked.start, end: picked.end);
+      _customTopFuture = ref.read(getTopProductsReportProvider).call(
+            start: picked.start,
+            end: picked.end,
+            limit: 5,
+          );
+    });
+  }
+
+  void _clearRange() {
+    setState(() {
+      _customRange = null;
+      _customSummaryFuture = null;
+      _customTopFuture = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final activationState = ref.watch(activationNotifierProvider);
     final isPremium = activationState.isPremium;
 
@@ -29,7 +72,7 @@ class ReportsPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!isPremium)
+            if (!isPremium) ...[
               _PremiumGate(
                 onActivateTap: () {
                   Navigator.of(context).push(
@@ -37,14 +80,25 @@ class ReportsPage extends ConsumerWidget {
                   );
                 },
               ),
-            const SizedBox(height: 16),
-            _SummarySection(ref: ref),
-            const SizedBox(height: 16),
-            _TopProductsSection(ref: ref),
-            const SizedBox(height: 16),
-            _LowStockSection(ref: ref),
-            const SizedBox(height: 16),
-            _DailyTrendSection(ref: ref),
+            ],
+            if (isPremium) ...[
+              const SizedBox(height: 16),
+              _SummarySection(ref: ref),
+              const SizedBox(height: 16),
+              _StockSummarySection(ref: ref),
+              const SizedBox(height: 16),
+              _CustomRangeSection(
+                range: _customRange,
+                onPickRange: _pickRange,
+                onClear: _clearRange,
+                summaryFuture: _customSummaryFuture,
+                topProductsFuture: _customTopFuture,
+              ),
+              const SizedBox(height: 16),
+              _TopProductsSection(ref: ref),
+              const SizedBox(height: 16),
+              _LowStockSection(ref: ref),
+            ],
           ],
         ),
       ),
@@ -83,7 +137,7 @@ class _PremiumGate extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Akses laporan hanya tersedia untuk Admin Premium. Aktifkan paket premium Rp30.000 untuk membuka laporan dan fitur lanjutan.',
+              'Premium cukup sekali bayar Rp30.000 untuk akses laporan lengkap seumur hidup.',
               style: TextStyle(color: Color(0xFF6B7280)),
             ),
             const SizedBox(height: 14),
@@ -168,6 +222,50 @@ class _SummarySection extends StatelessWidget {
             _SummaryCard(title: '7 hari', snapshot: weekly),
             _SummaryCard(title: '30 hari', snapshot: monthly),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StockSummarySection extends StatelessWidget {
+  const _StockSummarySection({required this.ref});
+
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final stockSummary = ref.watch(stockSummaryReportFutureProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Ringkasan Stok',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: stockSummary.when(
+              data: (data) {
+                return Column(
+                  children: [
+                    _StatRow(label: 'Total Produk', value: '${data.totalProducts}'),
+                    _StatRow(label: 'Total Unit Stok', value: '${data.totalStockUnits}'),
+                    _StatRow(label: 'Stok Menipis/Habis', value: '${data.lowStockCount}'),
+                    _StatRow(label: 'Stok Habis', value: '${data.outOfStockCount}'),
+                  ],
+                );
+              },
+              loading: () => const SizedBox(
+                height: 80,
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+              error: (error, _) => _ErrorText(message: error.toString()),
+            ),
+          ),
         ),
       ],
     );
@@ -262,6 +360,181 @@ class _TopProductsSection extends StatelessWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _CustomRangeSection extends StatelessWidget {
+  const _CustomRangeSection({
+    required this.range,
+    required this.onPickRange,
+    required this.onClear,
+    required this.summaryFuture,
+    required this.topProductsFuture,
+  });
+
+  final DateTimeRange? range;
+  final VoidCallback onPickRange;
+  final VoidCallback onClear;
+  final Future<SalesSummary>? summaryFuture;
+  final Future<List<TopProduct>>? topProductsFuture;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              'Laporan Kustom',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: onPickRange,
+              child: const Text('Pilih rentang tanggal'),
+            ),
+            if (range != null)
+              TextButton(
+                onPressed: onClear,
+                child: const Text('Reset'),
+              ),
+          ],
+        ),
+        if (range == null)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Text(
+              'Pilih rentang tanggal untuk melihat ringkasan dan top produk.',
+              style: TextStyle(color: Color(0xFF6B7280)),
+            ),
+          )
+        else ...[
+          const SizedBox(height: 8),
+          Text(
+            '${_formatDate(range!.start)} - ${_formatDate(range!.end)}',
+            style: const TextStyle(color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 12),
+          if (summaryFuture != null)
+            FutureBuilder<SalesSummary>(
+              future: summaryFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox(
+                    height: 80,
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return _ErrorText(message: snapshot.error.toString());
+                }
+                final data = snapshot.data;
+                if (data == null) {
+                  return const _ErrorText(message: 'Tidak ada data.');
+                }
+                return Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _StatRow(
+                          label: 'Transaksi',
+                          value: '${data.totalTransactions}',
+                        ),
+                        _StatRow(
+                          label: 'Item terjual',
+                          value: '${data.totalItems}',
+                        ),
+                        _StatRow(
+                          label: 'Bruto',
+                          value: _formatCurrency(data.grossSales),
+                        ),
+                        _StatRow(
+                          label: 'Diskon',
+                          value: _formatCurrency(data.discountTotal),
+                        ),
+                        _StatRow(
+                          label: 'Netto',
+                          value: _formatCurrency(data.netSales),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          const SizedBox(height: 12),
+          if (topProductsFuture != null)
+            FutureBuilder<List<TopProduct>>(
+              future: topProductsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox(
+                    height: 80,
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return _ErrorText(message: snapshot.error.toString());
+                }
+                final items = snapshot.data ?? [];
+                if (items.isEmpty) {
+                  return const Text('Belum ada transaksi pada rentang ini.');
+                }
+                return Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Top Produk (rentang dipilih)',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 12),
+                        for (final product in items)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        product.productName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${product.quantitySold} terjual',
+                                        style: const TextStyle(color: Color(0xFF6B7280)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  _formatCurrency(product.revenue),
+                                  style: const TextStyle(fontWeight: FontWeight.w800),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
       ],
     );
   }
@@ -389,114 +662,6 @@ class _LowStockTile extends StatelessWidget {
   }
 }
 
-class _DailyTrendSection extends StatelessWidget {
-  const _DailyTrendSection({required this.ref});
-
-  final WidgetRef ref;
-
-  @override
-  Widget build(BuildContext context) {
-    final trend = ref.watch(dailyTrendReportFutureProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Ringkasan Harian (30 hari)',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 12),
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: trend.when(
-              data: (items) {
-                if (items.isEmpty) {
-                  return const Text('Belum ada data transaksi 30 hari terakhir.');
-                }
-                final limited = items.take(10).toList();
-                return Column(
-                  children: [
-                    for (final day in limited)
-                      _DailyRow(day: day),
-                    if (items.length > limited.length)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 8),
-                        child: Text(
-                          'Menampilkan 10 hari terbaru',
-                          style: TextStyle(
-                            color: Color(0xFF6B7280),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-              loading: () => const SizedBox(
-                height: 80,
-                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-              ),
-              error: (error, _) => _ErrorText(message: error.toString()),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DailyRow extends StatelessWidget {
-  const _DailyRow({required this.day});
-
-  final DailySales day;
-
-  @override
-  Widget build(BuildContext context) {
-    final dateText = _formatDate(day.date);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  dateText,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${day.totalTransactions} trx • ${day.totalItems} item',
-                  style: const TextStyle(color: Color(0xFF6B7280)),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                _formatCurrency(day.netSales),
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Avg: ${_formatCurrency(day.averageTicket)}',
-                style: const TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _StatRow extends StatelessWidget {
   const _StatRow({required this.label, required this.value});
 
@@ -570,5 +735,3 @@ String _formatDate(DateTime date) {
   ];
   return '${date.day.toString().padLeft(2, '0')} ${months[date.month - 1]} ${date.year}';
 }
-
-

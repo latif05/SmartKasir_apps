@@ -1,5 +1,6 @@
 import '../../domain/entities/sales_summary.dart';
 import '../../domain/entities/stock_alert.dart';
+import '../../domain/entities/stock_summary.dart';
 import '../../domain/entities/top_product.dart';
 import '../../domain/repositories/report_repository.dart';
 import '../datasources/report_dao.dart';
@@ -109,5 +110,16 @@ class ReportRepositoryImpl implements ReportRepository {
         })
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date)); // terbaru di atas
+  }
+
+  @override
+  Future<StockSummary> getStockSummary() async {
+    final row = await _reportDao.fetchStockSummary();
+    return StockSummary(
+      totalProducts: row.totalProducts,
+      totalStockUnits: row.totalStockUnits,
+      lowStockCount: row.lowStockCount,
+      outOfStockCount: row.outOfStockCount,
+    );
   }
 }

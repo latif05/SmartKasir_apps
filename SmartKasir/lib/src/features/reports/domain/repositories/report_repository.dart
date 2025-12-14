@@ -1,5 +1,6 @@
 import '../entities/sales_summary.dart';
 import '../entities/stock_alert.dart';
+import '../entities/stock_summary.dart';
 import '../entities/top_product.dart';
 import '../entities/daily_sales.dart';
 
@@ -20,4 +21,6 @@ abstract class ReportRepository {
     required DateTime start,
     required DateTime end,
   });
+
+  Future<StockSummary> getStockSummary();
 }

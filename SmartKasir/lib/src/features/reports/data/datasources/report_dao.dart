@@ -177,6 +177,37 @@ class ReportDao {
         )
         .toList();
   }
+
+  Future<StockSummaryRow> fetchStockSummary() async {
+    final totals = await _database.customSelect(
+      '''
+      SELECT 
+        COUNT(p.id) AS totalProducts,
+        COALESCE(SUM(p.stock), 0) AS totalStock,
+        COUNT(CASE WHEN p.stock = 0 THEN 1 END) AS outOfStock
+      FROM products p
+      WHERE p.is_deleted = 0
+      ''',
+      readsFrom: {_database.products},
+    ).getSingle();
+
+    final lowStockRows = await _database.customSelect(
+      '''
+      SELECT COUNT(p.id) AS lowStock
+      FROM products p
+      WHERE p.is_deleted = 0
+        AND p.stock <= p.stock_min
+      ''',
+      readsFrom: {_database.products},
+    ).getSingle();
+
+    return StockSummaryRow(
+      totalProducts: totals.data['totalProducts'] as int? ?? 0,
+      totalStockUnits: (totals.data['totalStock'] as int?) ?? 0,
+      outOfStockCount: totals.data['outOfStock'] as int? ?? 0,
+      lowStockCount: lowStockRows.data['lowStock'] as int? ?? 0,
+    );
+  }
 }
 
 class SalesAggregateRow {
@@ -239,4 +270,18 @@ class DailyBreakdownRow {
   final double grossSales;
   final double discountTotal;
   final double netSales;
+}
+
+class StockSummaryRow {
+  const StockSummaryRow({
+    required this.totalProducts,
+    required this.totalStockUnits,
+    required this.lowStockCount,
+    required this.outOfStockCount,
+  });
+
+  final int totalProducts;
+  final int totalStockUnits;
+  final int lowStockCount;
+  final int outOfStockCount;
 }

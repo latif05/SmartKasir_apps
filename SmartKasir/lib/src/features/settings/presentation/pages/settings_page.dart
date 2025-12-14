@@ -126,8 +126,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       const SizedBox(height: 4),
                       Text(
                         isPremium
-                            ? 'Akses laporan, pengaturan toko, dan fitur admin premium tanpa batas waktu.'
-                            : 'Masukkan kode premium untuk membuka semua fitur selamanya (sekali bayar).',
+                            ? 'Akses laporan lengkap tanpa batas waktu.'
+                            : 'Premium sekali bayar Rp30.000 untuk akses laporan lengkap seumur hidup.',
                         style: Theme.of(context)
                             .textTheme
                             .bodySmall
@@ -156,8 +156,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               children: [
                 _Badge(text: isPremium ? 'Premium aktif' : 'Sekali bayar Rp30.000'),
                 const _Badge(text: 'Akses laporan lengkap'),
-                const _Badge(text: 'Pengaturan toko'),
-                const _Badge(text: 'Manajemen pengguna'),
               ],
             ),
           ],
