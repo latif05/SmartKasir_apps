@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../activation/presentation/providers/activation_providers.dart';
-import '../../../settings/presentation/pages/settings_page.dart';
 import '../../domain/entities/sales_summary.dart';
 import '../../domain/entities/top_product.dart';
 import '../../domain/entities/stock_alert.dart';
@@ -19,6 +19,24 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
   DateTimeRange? _customRange;
   Future<SalesSummary>? _customSummaryFuture;
   Future<List<TopProduct>>? _customTopFuture;
+  final Uri _waUri = Uri(
+    scheme: 'https',
+    host: 'wa.me',
+    path: '628971440666',
+    queryParameters: {
+      'text':
+          'Halo, saya ingin aktivasi Premium SmartKasir (sekali bayar Rp30.000). Mohon informasi lanjutannya.',
+    },
+  );
+
+  Future<void> _openWhatsApp() async {
+    final success = await launchUrl(_waUri, mode: LaunchMode.externalApplication);
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tidak dapat membuka WhatsApp')),
+      );
+    }
+  }
 
   Future<void> _pickRange() async {
     final now = DateTime.now();
@@ -63,7 +81,10 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
-        title: const Text('Laporan'),
+        title: const Text(
+          'Laporan',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
       ),
@@ -74,11 +95,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
           children: [
             if (!isPremium) ...[
               _PremiumGate(
-                onActivateTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const SettingsPage()),
-                  );
-                },
+                onActivateTap: _openWhatsApp,
               ),
             ],
             if (isPremium) ...[

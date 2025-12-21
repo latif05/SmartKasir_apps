@@ -1,12 +1,9 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
 
 part 'app_database.g.dart';
 
@@ -70,29 +67,9 @@ class AppDatabase extends _$AppDatabase {
     );
 
     // Seed default admin if not exists
-    final existingAdmin = await (select(users)
-          ..where((tbl) => tbl.username.equals('admin')))
-        .getSingleOrNull();
-
-    if (existingAdmin == null) {
-      final uuid = const Uuid();
-      await into(users).insert(
-        UsersCompanion.insert(
-          id: uuid.v4(),
-          username: 'admin',
-          passwordHash: _hashPassword('admin123'),
-          displayName: 'Administrator',
-          role: Value('admin'),
-        ),
-      );
-    }
   }
 }
 
-String _hashPassword(String value) {
-  final bytes = utf8.encode(value);
-  return sha256.convert(bytes).toString();
-}
 
 class Users extends Table {
   TextColumn get id => text()();

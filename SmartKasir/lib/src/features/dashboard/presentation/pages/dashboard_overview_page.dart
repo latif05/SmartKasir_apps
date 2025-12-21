@@ -158,28 +158,6 @@ class _TopBar extends StatelessWidget {
       ),
     );
 
-    final notificationButton = Stack(
-      alignment: Alignment.topRight,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.notifications_none_outlined),
-          onPressed: () {},
-        ),
-        Container(
-          margin: const EdgeInsets.only(top: 6, right: 6),
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: const Text(
-            '3',
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        ),
-      ],
-    );
-
     if (isCompact) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,7 +173,6 @@ class _TopBar extends StatelessWidget {
                   ),
                 ),
               ),
-              notificationButton,
             ],
           ),
           const SizedBox(height: 12),
@@ -215,8 +192,6 @@ class _TopBar extends StatelessWidget {
         ),
         const Spacer(),
         Flexible(flex: 0, child: searchField),
-        const SizedBox(width: 12),
-        notificationButton,
       ],
     );
   }

@@ -43,7 +43,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
-        title: const Text('Pengaturan'),
+        title: const Text(
+          'Pengaturan',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         actions: [
@@ -71,11 +74,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               phoneController: _phoneController,
               emailController: _emailController,
               onSave: _saveStoreProfile,
-            ),
-            const SizedBox(height: 24),
-            _BackupCard(
-              onBackup: _handleBackup,
-              isLoading: storeState.isLoading,
             ),
             const SizedBox(height: 24),
             _buildLogoutCard(context),
@@ -358,16 +356,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final message = state.error ?? state.message ?? 'Pengaturan tersimpan';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
-
-  Future<void> _handleBackup() async {
-    final notifier = ref.read(storeProfileNotifierProvider.notifier);
-    final path = await notifier.backup();
-    if (!mounted) return;
-    final state = ref.read(storeProfileNotifierProvider);
-    final message =
-        state.error ?? (path != null ? 'Backup tersimpan di $path' : 'Backup gagal');
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-  }
 }
 
 class _Badge extends StatelessWidget {
@@ -552,70 +540,6 @@ class _StoreInfoCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BackupCard extends StatelessWidget {
-  const _BackupCard({
-    required this.onBackup,
-    required this.isLoading,
-  });
-
-  final VoidCallback onBackup;
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: const [
-                Icon(Icons.backup_outlined, color: Color(0xFF2563EB)),
-                SizedBox(width: 8),
-                Text(
-                  'Backup Lokal',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Buat salinan database lokal ke folder aplikasi. Simpan file ini ke penyimpanan aman untuk restore manual.',
-              style: TextStyle(color: Color(0xFF4B5563)),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 44,
-              child: OutlinedButton.icon(
-                onPressed: isLoading ? null : onBackup,
-                icon: isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.download_outlined),
-                label: Text(isLoading ? 'Memproses...' : 'Buat Backup'),
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

@@ -5,6 +5,7 @@ import '../../../auth/domain/entities/user.dart';
 import '../providers/user_management_providers.dart';
 import '../state/user_management_notifier.dart';
 import '../state/user_management_state.dart';
+import 'widgets/user_card.dart';
 
 class UserManagementPage extends ConsumerWidget {
   const UserManagementPage({super.key});
@@ -79,6 +80,7 @@ class _UserTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(userManagementNotifierProvider.notifier);
+    final isCompact = MediaQuery.sizeOf(context).width < 520;
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -109,41 +111,96 @@ class _UserTable extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF2F4F9),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Row(
+            if (isCompact)
+              Column(
                 children: [
-                  Expanded(flex: 2, child: Text('Nama', style: TextStyle(fontWeight: FontWeight.w700))),
-                  Expanded(flex: 2, child: Text('Username', style: TextStyle(fontWeight: FontWeight.w700))),
-                  Expanded(child: Text('Role', style: TextStyle(fontWeight: FontWeight.w700))),
-                  Expanded(child: Text('Status', style: TextStyle(fontWeight: FontWeight.w700))),
-                  SizedBox(width: 80, child: Text('Aksi', style: TextStyle(fontWeight: FontWeight.w700))),
+                  if (state.users.isEmpty && !state.isLoading)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Column(
+                        children: const [
+                          Icon(Icons.people_outline, size: 48, color: Color(0xFF9CA3AF)),
+                          SizedBox(height: 8),
+                          Text('Belum ada kasir yang terdaftar'),
+                        ],
+                      ),
+                    )
+                  else
+                    ...state.users.map(
+                      (user) => UserCardCompact(
+                        user: user,
+                        onEdit: () => _openUserForm(context, ref, user: user),
+                        onDeactivate: user.role == 'admin'
+                            ? null
+                            : () => _confirmDeactivate(context, notifier, user),
+                      ),
+                    ),
                 ],
-              ),
-            ),
-            if (state.users.isEmpty && !state.isLoading)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Column(
-                  children: const [
-                    Icon(Icons.people_outline, size: 48, color: Color(0xFF9CA3AF)),
-                    SizedBox(height: 8),
-                    Text('Belum ada kasir yang terdaftar'),
-                  ],
-                ),
               )
             else
-              ...state.users.map(
-                (user) => _UserRow(
-                  user: user,
-                  onEdit: () => _openUserForm(context, ref, user: user),
-                  onDeactivate: user.role == 'admin'
-                      ? null
-                      : () => _confirmDeactivate(context, notifier, user),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 680),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF2F4F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          children: [
+                            Expanded(
+                              flex: 4,
+                              child: Text('Nama', style: TextStyle(fontWeight: FontWeight.w700)),
+                            ),
+                            Expanded(
+                              flex: 4,
+                              child: Text('Username', style: TextStyle(fontWeight: FontWeight.w700)),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text('Role', style: TextStyle(fontWeight: FontWeight.w700)),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text('Status', style: TextStyle(fontWeight: FontWeight.w700)),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: Text('Aksi', style: TextStyle(fontWeight: FontWeight.w700)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (state.users.isEmpty && !state.isLoading)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Column(
+                            children: const [
+                              Icon(Icons.people_outline, size: 48, color: Color(0xFF9CA3AF)),
+                              SizedBox(height: 8),
+                              Text('Belum ada kasir yang terdaftar'),
+                            ],
+                          ),
+                        )
+                      else
+                        ...state.users.map(
+                          (user) => _UserRow(
+                            user: user,
+                            onEdit: () => _openUserForm(context, ref, user: user),
+                            onDeactivate: user.role == 'admin'
+                                ? null
+                                : () => _confirmDeactivate(context, notifier, user),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             if (state.errorMessage != null)
@@ -184,14 +241,15 @@ class _UserRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            flex: 2,
+            flex: 4,
             child: Text(
               user.displayName,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
-          Expanded(flex: 2, child: Text(user.username)),
+          Expanded(flex: 4, child: Text(user.username)),
           Expanded(
+            flex: 2,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
@@ -210,13 +268,14 @@ class _UserRow extends StatelessWidget {
             ),
           ),
           Expanded(
+            flex: 2,
             child: Align(
               alignment: Alignment.centerLeft,
               child: _StatusBadge(isActive: user.isActive),
             ),
           ),
-          SizedBox(
-            width: 80,
+          Expanded(
+            flex: 2,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -461,7 +520,3 @@ Future<void> _openUserForm(
     },
   );
 }
-
-
-
-

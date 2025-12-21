@@ -36,15 +36,14 @@ class ActivationLocalDataSource {
     String? codeUsed,
     DateTime? activatedAt,
   }) {
-    return (_database.update(_database.activationStatus)
-          ..where((tbl) => tbl.id.equals(1)))
-        .write(
-      db.ActivationStatusCompanion(
-        isPremium: Value(isPremium ? 1 : 0),
-        codeUsed: Value(codeUsed),
-        activatedAt: Value(activatedAt ?? DateTime.now()),
-      ),
-    );
+    return _database.into(_database.activationStatus).insertOnConflictUpdate(
+          db.ActivationStatusCompanion(
+            id: const Value(1),
+            isPremium: Value(isPremium ? 1 : 0),
+            codeUsed: Value(codeUsed),
+            activatedAt: Value(activatedAt ?? DateTime.now()),
+          ),
+        );
   }
 
   Future<void> markCodeUsed(String code) {
@@ -58,13 +57,6 @@ class ActivationLocalDataSource {
   }
 
   Future<void> _seedCodesIfNeeded() async {
-    final countExp = db.$ActivationCodesTable(_database).code.count();
-    final query = _database.selectOnly(_database.activationCodes)
-      ..addColumns([countExp]);
-    final countRow = await query.getSingle();
-    final existingCount = countRow.read(countExp) ?? 0;
-    if (existingCount > 0) return;
-
     const codes = [
       'SKP-71A9X2M4',
       'SKP-2QF8H5ZP',
@@ -126,6 +118,11 @@ class ActivationLocalDataSource {
       'SKP-W1H4T9LX',
       'SKP-3V7Q2CPM',
     ];
+
+    final existing = await (_database.select(_database.activationCodes)
+          ..where((tbl) => tbl.code.equals(codes.first)))
+        .getSingleOrNull();
+    if (existing != null) return;
 
     await _database.batch((batch) {
       batch.insertAllOnConflictUpdate(

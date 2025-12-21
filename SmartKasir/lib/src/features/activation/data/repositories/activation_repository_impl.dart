@@ -20,6 +20,8 @@ class ActivationRepositoryImpl implements ActivationRepository {
 
   @override
   Future<void> activate(String code) async {
+    final normalizedCode = code.trim().toUpperCase();
+
     final currentStatus = await _localDataSource.getStatus();
     if (currentStatus.isPremium == 1) {
       throw const ActivationException(
@@ -27,7 +29,7 @@ class ActivationRepositoryImpl implements ActivationRepository {
       );
     }
 
-    final record = await _localDataSource.getCode(code);
+    final record = await _localDataSource.getCode(normalizedCode);
     if (record == null) {
       throw const ActivationException('Kode aktivasi tidak ditemukan');
     }
@@ -40,11 +42,10 @@ class ActivationRepositoryImpl implements ActivationRepository {
 
     await _localDataSource.markStatus(
       isPremium: true,
-      codeUsed: code,
+      codeUsed: normalizedCode,
       activatedAt: DateTime.now(),
     );
-    await _localDataSource.markCodeUsed(code);
+    await _localDataSource.markCodeUsed(normalizedCode);
   }
 }
-
 
