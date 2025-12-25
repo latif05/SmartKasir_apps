@@ -15,9 +15,7 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  final _formKey = GlobalKey<FormState>();
   final _storeFormKey = GlobalKey<FormState>();
-  final TextEditingController _codeController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -26,7 +24,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   void dispose() {
-    _codeController.dispose();
     _nameController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
@@ -51,7 +48,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         surfaceTintColor: Colors.white,
         actions: [
           IconButton(
-            onPressed: _isLoggingOut ? null : () => _handleLogout(fromAppBar: true),
+            onPressed: _isLoggingOut
+                ? null
+                : () => _handleLogout(fromAppBar: true),
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
           ),
@@ -64,8 +63,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           children: [
             _buildActivationStatusCard(context, activationState),
             const SizedBox(height: 16),
-            _buildActivationForm(context, activationState),
-            const SizedBox(height: 24),
             _StoreInfoCard(
               formKey: _storeFormKey,
               isLoading: storeState.isLoading,
@@ -93,7 +90,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final activatedText = state.activatedAt != null
         ? state.activatedAt!.toLocal().toString().split('.').first
         : '-';
-    final codeText = state.codeUsed ?? '-';
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -116,20 +112,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     children: [
                       Text(
                         statusText,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(color: color, fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: color,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         isPremium
                             ? 'Akses laporan lengkap tanpa batas waktu.'
                             : 'Premium sekali bayar Rp30.000 untuk akses laporan lengkap seumur hidup.',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: const Color(0xFF4B5563)),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF4B5563),
+                        ),
                       ),
                     ],
                   ),
@@ -142,84 +138,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               'Terakhir aktivasi: $activatedText',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Kode terakhir: $codeText',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _Badge(text: isPremium ? 'Premium aktif' : 'Sekali bayar Rp30.000'),
-                const _Badge(text: 'Akses laporan lengkap'),
-              ],
-            ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActivationForm(
-    BuildContext context,
-    ActivationState state,
-  ) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Aktivasi Premium',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Premium cukup diaktifkan sekali saja. Masukkan kode yang Anda terima setelah pembayaran Rp30.000 untuk membuka semua fitur selamanya.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Colors.grey[700]),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _codeController,
-                decoration: const InputDecoration(
-                  labelText: 'Kode Aktivasi',
-                  border: OutlineInputBorder(),
-                ),
-                textCapitalization: TextCapitalization.characters,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Kode tidak boleh kosong';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: state.isLoading ? null : _onActivate,
-                icon: state.isLoading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.check),
-                label: Text(state.isLoading ? 'Memproses...' : 'Aktifkan'),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -240,10 +159,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 SizedBox(width: 8),
                 Text(
                   'Keluar Akun',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                 ),
               ],
             ),
@@ -279,16 +195,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _onActivate() async {
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      return;
-    }
-
-    final notifier = ref.read(activationNotifierProvider.notifier);
-    await notifier.activate(_codeController.text);
-    _codeController.clear();
   }
 
   Future<void> _handleLogout({bool fromAppBar = false}) async {
@@ -335,10 +241,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _syncProfileControllers(StoreProfile profile) {
-    if (_nameController.text.isEmpty) _nameController.text = profile.name;
-    if (_addressController.text.isEmpty) _addressController.text = profile.address;
-    if (_phoneController.text.isEmpty) _phoneController.text = profile.phone;
-    if (_emailController.text.isEmpty) _emailController.text = profile.email;
+    if (_nameController.text.isEmpty) {
+      _nameController.text = profile.name;
+    }
+    if (_addressController.text.isEmpty) {
+      _addressController.text = profile.address;
+    }
+    if (_phoneController.text.isEmpty) {
+      _phoneController.text = profile.phone;
+    }
+    if (_emailController.text.isEmpty) {
+      _emailController.text = profile.email;
+    }
   }
 
   Future<void> _saveStoreProfile() async {
@@ -354,71 +268,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (!mounted) return;
     final state = ref.read(storeProfileNotifierProvider);
     final message = state.error ?? state.message ?? 'Pengaturan tersimpan';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Color(0xFF4F46E5),
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.isPremium});
-
-  final bool isPremium;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isPremium ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
-    final bg = isPremium ? const Color(0xFFE7F8EF) : const Color(0xFFFFF7E6);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isPremium ? Icons.check_circle : Icons.timer_outlined,
-            color: color,
-            size: 16,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            isPremium ? 'Aktif' : 'Tertunda',
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 class _StoreInfoCard extends StatelessWidget {
   const _StoreInfoCard({
     required this.formKey,
@@ -456,10 +311,7 @@ class _StoreInfoCard extends StatelessWidget {
                   SizedBox(width: 8),
                   Text(
                     'Informasi Toko',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                   ),
                 ],
               ),
@@ -541,6 +393,44 @@ class _StoreInfoCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.isPremium});
+
+  final bool isPremium;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isPremium ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
+    final bg = isPremium ? const Color(0xFFE7F8EF) : const Color(0xFFFFF7E6);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isPremium ? Icons.check_circle : Icons.timer_outlined,
+            color: color,
+            size: 16,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            isPremium ? 'Aktif' : 'Tertunda',
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }

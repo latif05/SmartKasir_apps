@@ -34,33 +34,45 @@ class UserManagementPage extends ConsumerWidget {
                     ),
                   ),
                   const Spacer(),
-                  IconButton(
-                    tooltip: 'Muat ulang',
-                    onPressed: notifier.loadUsers,
-                    icon: const Icon(Icons.refresh),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF6A7BFF),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Muat ulang',
+                        onPressed: notifier.loadUsers,
+                        icon: const Icon(Icons.refresh),
                       ),
-                    ),
-                    onPressed: () => _openUserForm(context, ref),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Tambah Kasir'),
+                      const SizedBox(width: 8),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 150),
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF6A7BFF),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            minimumSize: const Size(0, 44),
+                          ),
+                          onPressed: () => _openUserForm(context, ref),
+                          icon: const Icon(Icons.add),
+                          label: const Text(
+                            'Tambah',
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 'Kelola akun kasir secara lokal. Hanya Admin yang dapat menambah, mengubah, atau menonaktifkan.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: const Color(0xFF6B7280)),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: const Color(0xFF6B7280),
+                ),
               ),
               const SizedBox(height: 16),
               _UserTable(state: state),
@@ -93,10 +105,7 @@ class _UserTable extends ConsumerWidget {
               children: [
                 const Text(
                   'Daftar Kasir',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
                 const Spacer(),
                 if (state.isLoading)
@@ -119,7 +128,11 @@ class _UserTable extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(vertical: 24),
                       child: Column(
                         children: const [
-                          Icon(Icons.people_outline, size: 48, color: Color(0xFF9CA3AF)),
+                          Icon(
+                            Icons.people_outline,
+                            size: 48,
+                            color: Color(0xFF9CA3AF),
+                          ),
                           SizedBox(height: 8),
                           Text('Belum ada kasir yang terdaftar'),
                         ],
@@ -145,7 +158,10 @@ class _UserTable extends ConsumerWidget {
                   child: Column(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF2F4F9),
                           borderRadius: BorderRadius.circular(12),
@@ -154,25 +170,40 @@ class _UserTable extends ConsumerWidget {
                           children: [
                             Expanded(
                               flex: 4,
-                              child: Text('Nama', style: TextStyle(fontWeight: FontWeight.w700)),
+                              child: Text(
+                                'Nama',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
                             ),
                             Expanded(
                               flex: 4,
-                              child: Text('Username', style: TextStyle(fontWeight: FontWeight.w700)),
+                              child: Text(
+                                'Username',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
                             ),
                             Expanded(
                               flex: 2,
-                              child: Text('Role', style: TextStyle(fontWeight: FontWeight.w700)),
+                              child: Text(
+                                'Role',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
                             ),
                             Expanded(
                               flex: 2,
-                              child: Text('Status', style: TextStyle(fontWeight: FontWeight.w700)),
+                              child: Text(
+                                'Status',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
                             ),
                             Expanded(
                               flex: 2,
                               child: Align(
                                 alignment: Alignment.centerRight,
-                                child: Text('Aksi', style: TextStyle(fontWeight: FontWeight.w700)),
+                                child: Text(
+                                  'Aksi',
+                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                ),
                               ),
                             ),
                           ],
@@ -183,7 +214,11 @@ class _UserTable extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 24),
                           child: Column(
                             children: const [
-                              Icon(Icons.people_outline, size: 48, color: Color(0xFF9CA3AF)),
+                              Icon(
+                                Icons.people_outline,
+                                size: 48,
+                                color: Color(0xFF9CA3AF),
+                              ),
                               SizedBox(height: 8),
                               Text('Belum ada kasir yang terdaftar'),
                             ],
@@ -193,10 +228,15 @@ class _UserTable extends ConsumerWidget {
                         ...state.users.map(
                           (user) => _UserRow(
                             user: user,
-                            onEdit: () => _openUserForm(context, ref, user: user),
+                            onEdit: () =>
+                                _openUserForm(context, ref, user: user),
                             onDeactivate: user.role == 'admin'
                                 ? null
-                                : () => _confirmDeactivate(context, notifier, user),
+                                : () => _confirmDeactivate(
+                                    context,
+                                    notifier,
+                                    user,
+                                  ),
                           ),
                         ),
                     ],
@@ -219,11 +259,7 @@ class _UserTable extends ConsumerWidget {
 }
 
 class _UserRow extends StatelessWidget {
-  const _UserRow({
-    required this.user,
-    required this.onEdit,
-    this.onDeactivate,
-  });
+  const _UserRow({required this.user, required this.onEdit, this.onDeactivate});
 
   final User user;
   final VoidCallback onEdit;
@@ -234,9 +270,7 @@ class _UserRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE5E7EB)),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
       ),
       child: Row(
         children: [
@@ -334,7 +368,9 @@ Future<void> _confirmDeactivate(
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('Nonaktifkan kasir'),
-      content: Text('Apakah Anda yakin ingin menonaktifkan ${user.displayName}?'),
+      content: Text(
+        'Apakah Anda yakin ingin menonaktifkan ${user.displayName}?',
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
@@ -408,8 +444,9 @@ Future<void> _openUserForm(
                       labelText: 'Nama Lengkap',
                       filled: true,
                     ),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Nama wajib diisi' : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Nama wajib diisi'
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -419,14 +456,17 @@ Future<void> _openUserForm(
                       labelText: 'Username',
                       filled: true,
                     ),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Username wajib diisi' : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Username wajib diisi'
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: passwordController,
                     decoration: InputDecoration(
-                      labelText: isEdit ? 'Password baru (opsional)' : 'Password',
+                      labelText: isEdit
+                          ? 'Password baru (opsional)'
+                          : 'Password',
                       filled: true,
                     ),
                     obscureText: true,

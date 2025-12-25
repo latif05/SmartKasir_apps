@@ -6,6 +6,7 @@ abstract class ProductRepository {
   Future<Product?> getProduct(String id);
 
   Future<void> createProduct({
+    String? productId,
     required String categoryId,
     required String name,
     double? purchasePrice,

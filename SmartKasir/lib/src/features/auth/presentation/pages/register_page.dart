@@ -153,17 +153,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               child: Column(
                 children: [
                   Container(
-                    height: 72,
-                    width: 72,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                    height: 100,
+                    width: 100,
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x33000000),
+                          blurRadius: 12,
+                          offset: Offset(0, 6),
+                        ),
+                      ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
+                    child: ClipOval(
                       child: Image.asset(
                         'assets/images/Logo.png',
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),

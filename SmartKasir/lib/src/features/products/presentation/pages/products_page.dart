@@ -106,14 +106,18 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
     }
   }
 
-  Future<void> _openAdjustStock(Product product) async {
+  Future<void> _openAdjustStock(
+    Product product, {
+    required bool allowDecrease,
+  }) async {
     final delta = await showModalBottomSheet<int>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => _AdjustStockSheet(product: product),
+      builder: (_) =>
+          _AdjustStockSheet(product: product, allowDecrease: allowDecrease),
     );
 
     if (delta == null) return;
@@ -125,9 +129,7 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
       final msg = delta >= 0
           ? 'Stok bertambah $delta'
           : 'Stok berkurang ${delta.abs()}';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } on ArgumentError catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -144,7 +146,11 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
-    final canManageProducts = (authState.user?.role ?? 'cashier') == 'admin';
+    final role = authState.user?.role ?? 'cashier';
+    final isAdmin = role == 'admin';
+    final canManageProducts = isAdmin;
+    final canAdjustStock = role == 'admin' || role == 'cashier';
+    final canAddProduct = role == 'admin' || role == 'cashier';
 
     final productState = ref.watch(productListNotifierProvider);
     final categoryState = ref.watch(categoryListNotifierProvider);
@@ -209,9 +215,7 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
         .toList();
 
     final stockLogs = [...productState.logs]
-      ..sort(
-        (a, b) => b.timestamp.compareTo(a.timestamp),
-      );
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
@@ -224,13 +228,10 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
               _Header(
                 searchController: _searchController,
                 onAdd: () => _openProductForm(categories),
-                canManage: canManageProducts,
+                canManage: canAddProduct,
               ),
-              if (!canManageProducts) ...[
-                const SizedBox(height: 12),
-                const _ViewOnlyBanner(),
-              ],
-              if (lowStockProducts.isNotEmpty || outOfStockProducts.isNotEmpty) ...[
+              if (lowStockProducts.isNotEmpty ||
+                  outOfStockProducts.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 _StockAlertBanner(
                   lowStockCount: lowStockProducts.length,
@@ -260,8 +261,10 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                 onEdit: (product) =>
                     _openProductForm(categories, product: product),
                 onDelete: _deleteProduct,
-                onAdjustStock: _openAdjustStock,
+                onAdjustStock: (product) =>
+                    _openAdjustStock(product, allowDecrease: isAdmin),
                 canManage: canManageProducts,
+                canAdjust: canAdjustStock,
               ),
               const SizedBox(height: 20),
               _StockLogCard(logs: stockLogs),
@@ -366,37 +369,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _ViewOnlyBanner extends StatelessWidget {
-  const _ViewOnlyBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFCCFCC)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline, color: Color(0xFFF97316)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Akses kasir hanya dapat melihat daftar produk. Aksi tambah/ubah/hapus hanya tersedia untuk admin.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF9A3412)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _StockAlertBanner extends StatelessWidget {
   const _StockAlertBanner({
     required this.lowStockCount,
@@ -428,15 +400,18 @@ class _StockAlertBanner extends StatelessWidget {
         children: [
           Icon(
             isWarning ? Icons.warning_amber_rounded : Icons.check_circle,
-            color: isWarning ? const Color(0xFFF97316) : const Color(0xFF10B981),
+            color: isWarning
+                ? const Color(0xFFF97316)
+                : const Color(0xFF10B981),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
-                color:
-                    isWarning ? const Color(0xFF9A3412) : const Color(0xFF047857),
+                color: isWarning
+                    ? const Color(0xFF9A3412)
+                    : const Color(0xFF047857),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -635,10 +610,7 @@ class _StockLogCard extends StatelessWidget {
           children: [
             const Text(
               'Riwayat Stok',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -658,8 +630,9 @@ class _StockLogCard extends StatelessWidget {
                     final log = latestLogs[index];
                     final isIncrease = log.delta >= 0;
                     final deltaText = '${isIncrease ? '+' : ''}${log.delta}';
-                    final deltaColor =
-                        isIncrease ? const Color(0xFF16A34A) : const Color(0xFFF97316);
+                    final deltaColor = isIncrease
+                        ? const Color(0xFF16A34A)
+                        : const Color(0xFFF97316);
 
                     return Column(
                       children: [
@@ -675,7 +648,9 @@ class _StockLogCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
-                                isIncrease ? Icons.north_east : Icons.south_east,
+                                isIncrease
+                                    ? Icons.north_east
+                                    : Icons.south_east,
                                 color: deltaColor,
                                 size: 18,
                               ),
@@ -765,6 +740,7 @@ class _ProductTable extends StatelessWidget {
     required this.onDelete,
     required this.onAdjustStock,
     required this.canManage,
+    required this.canAdjust,
   });
 
   final List<_ProductRowData> items;
@@ -777,6 +753,7 @@ class _ProductTable extends StatelessWidget {
   final void Function(Product product) onDelete;
   final void Function(Product product) onAdjustStock;
   final bool canManage;
+  final bool canAdjust;
 
   @override
   Widget build(BuildContext context) {
@@ -871,6 +848,7 @@ class _ProductTable extends StatelessWidget {
                         onDelete: () => onDelete(item.product),
                         onAdjust: () => onAdjustStock(item.product),
                         canManage: canManage,
+                        canAdjust: canAdjust,
                       ),
                     )
                     .toList(),
@@ -928,30 +906,12 @@ class _TableHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
       child: Row(
         children: [
-          const Expanded(
-            flex: 2,
-            child: _HeaderText('ID'),
-          ),
-          const Expanded(
-            flex: 4,
-            child: _HeaderText('Nama Produk'),
-          ),
-          const Expanded(
-            flex: 3,
-            child: _HeaderText('Kategori'),
-          ),
-          const Expanded(
-            flex: 3,
-            child: _HeaderText('Harga Beli'),
-          ),
-          const Expanded(
-            flex: 3,
-            child: _HeaderText('Harga Jual'),
-          ),
-          const Expanded(
-            flex: 2,
-            child: _HeaderText('Stok'),
-          ),
+          const Expanded(flex: 2, child: _HeaderText('ID')),
+          const Expanded(flex: 4, child: _HeaderText('Nama Produk')),
+          const Expanded(flex: 3, child: _HeaderText('Kategori')),
+          const Expanded(flex: 3, child: _HeaderText('Harga Beli')),
+          const Expanded(flex: 3, child: _HeaderText('Harga Jual')),
+          const Expanded(flex: 2, child: _HeaderText('Stok')),
           SizedBox(
             width: 120,
             child: Text(
@@ -995,6 +955,7 @@ class _TableRowItem extends StatelessWidget {
     required this.onDelete,
     required this.onAdjust,
     required this.canManage,
+    required this.canAdjust,
   });
 
   final _ProductRowData item;
@@ -1002,6 +963,7 @@ class _TableRowItem extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onAdjust;
   final bool canManage;
+  final bool canAdjust;
 
   @override
   Widget build(BuildContext context) {
@@ -1122,6 +1084,15 @@ class _TableRowItem extends StatelessWidget {
                       ),
                     ],
                   )
+                : canAdjust
+                ? Align(
+                    alignment: Alignment.centerRight,
+                    child: _ActionChip(
+                      icon: Icons.inventory_2_outlined,
+                      color: const Color(0xFF0EA5E9),
+                      onTap: onAdjust,
+                    ),
+                  )
                 : const Align(
                     alignment: Alignment.centerRight,
                     child: Text(
@@ -1204,6 +1175,7 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
   late final TextEditingController _sellingController;
   late final TextEditingController _stockController;
   late final TextEditingController _unitController;
+  late final TextEditingController _idController;
   String? _selectedCategoryId;
   bool _isSubmitting = false;
   String? _error;
@@ -1228,6 +1200,7 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
       text: _intToText(widget.initial?.stock),
     );
     _unitController = TextEditingController(text: widget.initial?.unit ?? '');
+    _idController = TextEditingController(text: widget.initial?.id ?? '');
   }
 
   @override
@@ -1237,6 +1210,7 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
     _sellingController.dispose();
     _stockController.dispose();
     _unitController.dispose();
+    _idController.dispose();
     super.dispose();
   }
 
@@ -1275,6 +1249,7 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
         );
       } else {
         await notifier.createProduct(
+          productId: _idController.text.trim(),
           categoryId: _selectedCategoryId!,
           name: _nameController.text,
           purchasePrice: purchase,
@@ -1322,6 +1297,24 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (!_isEdit) ...[
+            TextFormField(
+              controller: _idController,
+              decoration: const InputDecoration(
+                labelText: 'ID Produk',
+                hintText: 'Masukkan ID unik (tanpa spasi)',
+                border: OutlineInputBorder(),
+              ),
+              textCapitalization: TextCapitalization.characters,
+              validator: (value) {
+                final v = value?.trim() ?? '';
+                if (v.isEmpty) return 'ID produk wajib diisi';
+                if (v.contains(' ')) return 'ID tidak boleh ada spasi';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
           TextFormField(
             controller: _nameController,
             autofocus: true,
@@ -1411,10 +1404,7 @@ class _ProductFormDialogState extends ConsumerState<_ProductFormDialog> {
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                _error!,
-                style: const TextStyle(color: Colors.red),
-              ),
+              child: Text(_error!, style: const TextStyle(color: Colors.red)),
             ),
           ],
         ],
@@ -1525,9 +1515,10 @@ class _ConfirmDeleteDialog extends StatelessWidget {
 }
 
 class _AdjustStockSheet extends StatefulWidget {
-  const _AdjustStockSheet({required this.product});
+  const _AdjustStockSheet({required this.product, required this.allowDecrease});
 
   final Product product;
+  final bool allowDecrease;
 
   @override
   State<_AdjustStockSheet> createState() => _AdjustStockSheetState();
@@ -1579,10 +1570,7 @@ class _AdjustStockSheetState extends State<_AdjustStockSheet> {
             const SizedBox(height: 12),
             Text(
               'Atur Stok - ${product.name}',
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
@@ -1598,11 +1586,12 @@ class _AdjustStockSheetState extends State<_AdjustStockSheet> {
                   onSelected: (_) => setState(() => _isAdding = true),
                 ),
                 const SizedBox(width: 8),
-                ChoiceChip(
-                  label: const Text('Kurangi'),
-                  selected: !_isAdding,
-                  onSelected: (_) => setState(() => _isAdding = false),
-                ),
+                if (widget.allowDecrease)
+                  ChoiceChip(
+                    label: const Text('Kurangi'),
+                    selected: !_isAdding,
+                    onSelected: (_) => setState(() => _isAdding = false),
+                  ),
               ],
             ),
             const SizedBox(height: 12),
@@ -1616,10 +1605,7 @@ class _AdjustStockSheetState extends State<_AdjustStockSheet> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 8),
-              Text(
-                _error!,
-                style: const TextStyle(color: Colors.red),
-              ),
+              Text(_error!, style: const TextStyle(color: Colors.red)),
             ],
             const SizedBox(height: 12),
             SizedBox(
@@ -1631,7 +1617,9 @@ class _AdjustStockSheetState extends State<_AdjustStockSheet> {
                     setState(() => _error = 'Jumlah harus lebih dari 0');
                     return;
                   }
-                  final delta = _isAdding ? qty : -qty;
+                  final delta = (!_isAdding && widget.allowDecrease)
+                      ? -qty
+                      : qty;
                   Navigator.of(context).pop(delta);
                 },
                 style: ElevatedButton.styleFrom(

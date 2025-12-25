@@ -75,6 +75,7 @@ class ProductListNotifier extends StateNotifier<ProductListState> {
   }
 
   Future<void> createProduct({
+    String? productId,
     required String categoryId,
     required String name,
     required double purchasePrice,
@@ -85,6 +86,7 @@ class ProductListNotifier extends StateNotifier<ProductListState> {
   }) {
     return _performAction(
       () => _createProduct(
+        productId: productId,
         categoryId: categoryId,
         name: name,
         purchasePrice: purchasePrice,

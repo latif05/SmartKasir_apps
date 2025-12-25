@@ -7,6 +7,7 @@ class CreateProduct {
   final ProductRepository _repository;
 
   Future<void> call({
+    String? productId,
     required String categoryId,
     required String name,
     double? purchasePrice,
@@ -35,7 +36,13 @@ class CreateProduct {
     final validatedStock = _ensureNonNegativeInt(stock ?? 0);
     final validatedStockMin = _ensureNonNegativeInt(stockMin ?? 0);
 
+    final manualId = productId?.trim();
+    if (manualId != null && manualId.isEmpty) {
+      throw const ValidationException('ID produk tidak boleh kosong');
+    }
+
     return _repository.createProduct(
+      productId: manualId,
       categoryId: trimmedCategory,
       name: trimmedName,
       purchasePrice: validatedPurchase,

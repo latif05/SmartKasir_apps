@@ -70,7 +70,7 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
           activeIcon: Icons.settings,
           label: 'Pengaturan',
           builder: () => const SettingsPage(),
-          allowedRoles: const {'admin'},
+          allowedRoles: const {'admin', 'cashier'},
         ),
       ];
 

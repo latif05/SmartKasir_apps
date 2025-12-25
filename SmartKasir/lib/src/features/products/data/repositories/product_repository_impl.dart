@@ -17,6 +17,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<void> createProduct({
+    String? productId,
     required String categoryId,
     required String name,
     double? purchasePrice,
@@ -28,10 +29,22 @@ class ProductRepositoryImpl implements ProductRepository {
   }) async {
     await _ensureCategoryExists(categoryId);
 
+    final manualId = productId?.trim();
+    final idToUse = (manualId != null && manualId.isNotEmpty)
+        ? manualId
+        : _uuid.v4();
+
+    if (manualId != null && manualId.isNotEmpty) {
+      final existing = await _productDao.getById(idToUse);
+      if (existing != null && existing.isDeleted == 0) {
+        throw const ValidationException('ID produk sudah digunakan');
+      }
+    }
+
     final now = DateTime.now();
     await _productDao.upsert(
       db.ProductsCompanion(
-        id: Value(_uuid.v4()),
+        id: Value(idToUse),
         categoryId: Value(categoryId),
         name: Value(name),
         purchasePrice: Value(purchasePrice ?? 0),

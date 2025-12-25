@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -16,21 +17,33 @@ class ReportsPage extends ConsumerStatefulWidget {
 }
 
 class _ReportsPageState extends ConsumerState<ReportsPage> {
+  final _codeFormKey = GlobalKey<FormState>();
+  final TextEditingController _codeController = TextEditingController();
   DateTimeRange? _customRange;
   Future<SalesSummary>? _customSummaryFuture;
   Future<List<TopProduct>>? _customTopFuture;
   final Uri _waUri = Uri(
     scheme: 'https',
     host: 'wa.me',
-    path: '628971440666',
+    path: '6289680809593',
     queryParameters: {
       'text':
           'Halo, saya ingin aktivasi Premium SmartKasir (sekali bayar Rp30.000). Mohon informasi lanjutannya.',
     },
   );
+  static const _adminPhoneDisplay = '089680809593';
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
 
   Future<void> _openWhatsApp() async {
-    final success = await launchUrl(_waUri, mode: LaunchMode.externalApplication);
+    final success = await launchUrl(
+      _waUri,
+      mode: LaunchMode.externalApplication,
+    );
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tidak dapat membuka WhatsApp')),
@@ -45,11 +58,8 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
       context: context,
       firstDate: DateTime(now.year - 5),
       lastDate: DateTime(now.year + 1),
-      initialDateRange: _customRange ??
-          DateTimeRange(
-            start: startOfMonth,
-            end: now,
-          ),
+      initialDateRange:
+          _customRange ?? DateTimeRange(start: startOfMonth, end: now),
     );
     if (picked == null) return;
     setState(() {
@@ -57,11 +67,9 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
       _customSummaryFuture = ref
           .read(getPeriodicReportProvider)
           .call(start: picked.start, end: picked.end);
-      _customTopFuture = ref.read(getTopProductsReportProvider).call(
-            start: picked.start,
-            end: picked.end,
-            limit: 5,
-          );
+      _customTopFuture = ref
+          .read(getTopProductsReportProvider)
+          .call(start: picked.start, end: picked.end, limit: 5);
     });
   }
 
@@ -94,9 +102,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (!isPremium) ...[
-              _PremiumGate(
-                onActivateTap: _openWhatsApp,
-              ),
+              _PremiumGate(onActivateTap: _showActivationDialog),
             ],
             if (isPremium) ...[
               const SizedBox(height: 16),
@@ -119,6 +125,164 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showActivationDialog() {
+    _codeController.clear();
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final activationState = ref.watch(activationNotifierProvider);
+            final isLoading = activationState.isLoading;
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                child: Form(
+                  key: _codeFormKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: const [
+                            Icon(Icons.verified, color: Color(0xFF4F46E5)),
+                            SizedBox(width: 8),
+                            Text(
+                              'Aktivasi Premium',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _DialogStepCard(
+                          title: 'Langkah 1: Transfer',
+                          description: 'Transfer Rp30.000 ke nomor berikut:',
+                          highlight: _adminPhoneDisplay,
+                          trailing: IconButton(
+                            icon: const Icon(Icons.copy, size: 18),
+                            onPressed: () async {
+                              await Clipboard.setData(
+                                const ClipboardData(text: _adminPhoneDisplay),
+                              );
+                              if (!dialogContext.mounted) return;
+                              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                const SnackBar(content: Text('Nomor disalin')),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _DialogStepAction(
+                          label: 'Langkah 2: Kirim bukti via WhatsApp',
+                          onPressed: _openWhatsApp,
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Langkah 3: Masukkan kode',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _codeController,
+                          decoration: const InputDecoration(
+                            prefixIcon: Icon(Icons.vpn_key_outlined),
+                            labelText: 'Kode Aktivasi',
+                            border: OutlineInputBorder(),
+                          ),
+                          textCapitalization: TextCapitalization.characters,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Kode tidak boleh kosong';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: isLoading
+                                    ? null
+                                    : () => Navigator.of(dialogContext).pop(),
+                                child: const Text('Batal'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: SizedBox(
+                                height: 46,
+                                child: ElevatedButton(
+                                  onPressed: isLoading
+                                      ? null
+                                      : () async {
+                                          if (!(_codeFormKey.currentState
+                                                  ?.validate() ??
+                                              false)) {
+                                            return;
+                                          }
+                                          final notifier = ref.read(
+                                            activationNotifierProvider.notifier,
+                                          );
+                                          await notifier.activate(
+                                            _codeController.text,
+                                          );
+                                          _codeController.clear();
+                                          if (!dialogContext.mounted) return;
+                                          final state = ref.read(
+                                            activationNotifierProvider,
+                                          );
+                                          final navigator = Navigator.of(
+                                            dialogContext,
+                                          );
+                                          if (state.isPremium &&
+                                              navigator.canPop()) {
+                                            navigator.pop();
+                                          }
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF1D4ED8),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: isLoading
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Text('Aktifkan'),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -145,10 +309,7 @@ class _PremiumGate extends StatelessWidget {
                 SizedBox(width: 8),
                 Text(
                   'Premium diperlukan',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                 ),
               ],
             ),
@@ -165,6 +326,7 @@ class _PremiumGate extends StatelessWidget {
                 _Chip(text: 'Ringkasan penjualan'),
                 _Chip(text: 'Top produk'),
                 _Chip(text: 'Stok minimum'),
+                _Chip(text: 'Manajemen pengguna'),
               ],
             ),
             const SizedBox(height: 16),
@@ -173,8 +335,13 @@ class _PremiumGate extends StatelessWidget {
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6A7BFF),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: onActivateTap,
                 icon: const Icon(Icons.flash_on_outlined, size: 18),
@@ -182,6 +349,92 @@ class _PremiumGate extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DialogStepCard extends StatelessWidget {
+  const _DialogStepCard({
+    required this.title,
+    required this.description,
+    required this.highlight,
+    this.trailing,
+  });
+
+  final String title;
+  final String description;
+  final String highlight;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE0E7FF),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(description),
+                    const SizedBox(height: 4),
+                    Text(
+                      highlight,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: Color(0xFF1D4ED8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DialogStepAction extends StatelessWidget {
+  const _DialogStepAction({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
+        label: Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF25D366),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFF25D366)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );
@@ -262,17 +515,31 @@ class _StockSummarySection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: stockSummary.when(
               data: (data) {
                 return Column(
                   children: [
-                    _StatRow(label: 'Total Produk', value: '${data.totalProducts}'),
-                    _StatRow(label: 'Total Unit Stok', value: '${data.totalStockUnits}'),
-                    _StatRow(label: 'Stok Menipis/Habis', value: '${data.lowStockCount}'),
-                    _StatRow(label: 'Stok Habis', value: '${data.outOfStockCount}'),
+                    _StatRow(
+                      label: 'Total Produk',
+                      value: '${data.totalProducts}',
+                    ),
+                    _StatRow(
+                      label: 'Total Unit Stok',
+                      value: '${data.totalStockUnits}',
+                    ),
+                    _StatRow(
+                      label: 'Stok Menipis/Habis',
+                      value: '${data.lowStockCount}',
+                    ),
+                    _StatRow(
+                      label: 'Stok Habis',
+                      value: '${data.outOfStockCount}',
+                    ),
                   ],
                 );
               },
@@ -316,10 +583,19 @@ class _SummaryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                _StatRow(label: 'Transaksi', value: '${data.totalTransactions}'),
+                _StatRow(
+                  label: 'Transaksi',
+                  value: '${data.totalTransactions}',
+                ),
                 _StatRow(label: 'Item terjual', value: '${data.totalItems}'),
-                _StatRow(label: 'Bruto', value: _formatCurrency(data.grossSales)),
-                _StatRow(label: 'Diskon', value: _formatCurrency(data.discountTotal)),
+                _StatRow(
+                  label: 'Bruto',
+                  value: _formatCurrency(data.grossSales),
+                ),
+                _StatRow(
+                  label: 'Diskon',
+                  value: _formatCurrency(data.discountTotal),
+                ),
                 _StatRow(label: 'Netto', value: _formatCurrency(data.netSales)),
               ],
             ),
@@ -352,7 +628,9 @@ class _TopProductsSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: topProducts.when(
@@ -363,9 +641,7 @@ class _TopProductsSection extends StatelessWidget {
                 return Column(
                   children: [
                     for (final product in items)
-                      _TopProductTile(
-                        product: product,
-                      ),
+                      _TopProductTile(product: product),
                   ],
                 );
               },
@@ -414,10 +690,7 @@ class _CustomRangeSection extends StatelessWidget {
               child: const Text('Pilih rentang tanggal'),
             ),
             if (range != null)
-              TextButton(
-                onPressed: onClear,
-                child: const Text('Reset'),
-              ),
+              TextButton(onPressed: onClear, child: const Text('Reset')),
           ],
         ),
         if (range == null)
@@ -442,7 +715,9 @@ class _CustomRangeSection extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox(
                     height: 80,
-                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   );
                 }
                 if (snapshot.hasError) {
@@ -453,7 +728,9 @@ class _CustomRangeSection extends StatelessWidget {
                   return const _ErrorText(message: 'Tidak ada data.');
                 }
                 return Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -493,7 +770,9 @@ class _CustomRangeSection extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox(
                     height: 80,
-                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   );
                 }
                 if (snapshot.hasError) {
@@ -504,7 +783,9 @@ class _CustomRangeSection extends StatelessWidget {
                   return const Text('Belum ada transaksi pada rentang ini.');
                 }
                 return Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -522,7 +803,8 @@ class _CustomRangeSection extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         product.productName,
@@ -533,14 +815,18 @@ class _CustomRangeSection extends StatelessWidget {
                                       const SizedBox(height: 4),
                                       Text(
                                         '${product.quantitySold} terjual',
-                                        style: const TextStyle(color: Color(0xFF6B7280)),
+                                        style: const TextStyle(
+                                          color: Color(0xFF6B7280),
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
                                 Text(
                                   _formatCurrency(product.revenue),
-                                  style: const TextStyle(fontWeight: FontWeight.w800),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                               ],
                             ),
@@ -574,9 +860,7 @@ class _TopProductTile extends StatelessWidget {
               children: [
                 Text(
                   product.productName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -588,9 +872,7 @@ class _TopProductTile extends StatelessWidget {
           ),
           Text(
             _formatCurrency(product.revenue),
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -615,7 +897,9 @@ class _LowStockSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: lowStock.when(
@@ -625,10 +909,7 @@ class _LowStockSection extends StatelessWidget {
                 }
                 return Column(
                   children: [
-                    for (final alert in items)
-                      _LowStockTile(
-                        alert: alert,
-                      ),
+                    for (final alert in items) _LowStockTile(alert: alert),
                   ],
                 );
               },
@@ -717,10 +998,7 @@ class _ErrorText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      message,
-      style: const TextStyle(color: Color(0xFFDC2626)),
-    );
+    return Text(message, style: const TextStyle(color: Color(0xFFDC2626)));
   }
 }
 

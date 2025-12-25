@@ -110,17 +110,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               child: Column(
                 children: [
                   Container(
-                    height: 80,
-                    width: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                    height: 100,
+                    width: 100,
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x33000000),
+                          blurRadius: 12,
+                          offset: Offset(0, 6),
+                        ),
+                      ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
+                    child: ClipOval(
                       child: Image.asset(
                         'assets/images/Logo.png',
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
@@ -203,23 +208,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           },
                         ),
                         const Text('Ingat saya'),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {},
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: const Size(0, 0),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: const Text(
-                                'Lupa password?',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -249,8 +237,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     width: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      valueColor:
-                                          AlwaysStoppedAnimation(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation(
+                                        Colors.white,
+                                      ),
                                     ),
                                   )
                                 : Row(
@@ -310,9 +299,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         Text(
           label,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
-              ),
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[800],
+          ),
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -327,7 +316,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: const Color(0xFFF5F6FF),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 18,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: Color(0xFFE1E3FF)),
@@ -338,7 +330,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Color(0xFF7F4FD7), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF7F4FD7),
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -368,9 +363,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (ctx) => const RegisterPage(),
-                  ),
+                  MaterialPageRoute(builder: (ctx) => const RegisterPage()),
                 );
               },
               style: TextButton.styleFrom(
