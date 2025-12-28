@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../activation/presentation/providers/activation_providers.dart';
 import '../../../activation/presentation/state/activation_state.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../user_management/presentation/providers/user_management_providers.dart';
 import '../../domain/entities/store_profile.dart';
 import '../providers/settings_providers.dart';
 
@@ -21,6 +22,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   bool _isLoggingOut = false;
+  final _passwordFormKey = GlobalKey<FormState>();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  bool _isUpdatingPassword = false;
 
   @override
   void dispose() {
@@ -28,6 +34,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     _addressController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -35,6 +43,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget build(BuildContext context) {
     final activationState = ref.watch(activationNotifierProvider);
     final storeState = ref.watch(storeProfileNotifierProvider);
+    final authState = ref.watch(authNotifierProvider);
     _syncProfileControllers(storeState.profile);
 
     return Scaffold(
@@ -72,6 +81,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               emailController: _emailController,
               onSave: _saveStoreProfile,
             ),
+            if (authState.user?.role == 'admin') ...[
+              const SizedBox(height: 16),
+              _PasswordCard(
+                formKey: _passwordFormKey,
+                newPasswordController: _newPasswordController,
+                confirmPasswordController: _confirmPasswordController,
+                isLoading: _isUpdatingPassword,
+                onSave: () => _changePassword(authState.user!.id),
+              ),
+            ],
             const SizedBox(height: 24),
             _buildLogoutCard(context),
           ],
@@ -272,6 +291,30 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
+
+  Future<void> _changePassword(String userId) async {
+    if (!(_passwordFormKey.currentState?.validate() ?? false)) return;
+    setState(() => _isUpdatingPassword = true);
+    try {
+      final repo = ref.read(userManagementRepositoryProvider);
+      await repo.updateUser(id: userId, password: _newPasswordController.text);
+      _newPasswordController.clear();
+      _confirmPasswordController.clear();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kata sandi berhasil diperbarui')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal memperbarui kata sandi')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingPassword = false);
+      }
+    }
+  }
 }
 
 class _StoreInfoCard extends StatelessWidget {
@@ -388,6 +431,112 @@ class _StoreInfoCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PasswordCard extends StatelessWidget {
+  const _PasswordCard({
+    required this.formKey,
+    required this.newPasswordController,
+    required this.confirmPasswordController,
+    required this.isLoading,
+    required this.onSave,
+  });
+
+  final GlobalKey<FormState> formKey;
+  final TextEditingController newPasswordController;
+  final TextEditingController confirmPasswordController;
+  final bool isLoading;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.lock_outline, color: Color(0xFF4338CA)),
+                  SizedBox(width: 8),
+                  Text(
+                    'Ganti Kata Sandi',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: newPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Kata sandi baru',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Kata sandi wajib diisi';
+                  }
+                  if (value.length < 6) {
+                    return 'Minimal 6 karakter';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Konfirmasi kata sandi',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Konfirmasi wajib diisi';
+                  }
+                  if (value != newPasswordController.text) {
+                    return 'Konfirmasi tidak sama';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 46,
+                child: ElevatedButton.icon(
+                  onPressed: isLoading ? null : onSave,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6A7BFF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.save_outlined),
+                  label: Text(isLoading ? 'Menyimpan...' : 'Simpan Kata Sandi'),
                 ),
               ),
             ],
