@@ -4,6 +4,7 @@ import '../../../../core/error/app_exception.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/activation_status.dart';
 import '../../domain/usecases/activate_with_code.dart';
+import '../../domain/usecases/activate_from_purchase.dart';
 import '../../domain/usecases/get_activation_status.dart';
 import 'activation_state.dart';
 
@@ -11,18 +12,21 @@ class ActivationNotifier extends StateNotifier<ActivationState> {
   ActivationNotifier(
     this._getActivationStatus,
     this._activateWithCode,
+    this._activateFromPurchase,
   ) : super(const ActivationState()) {
     loadStatus();
   }
 
   final GetActivationStatus _getActivationStatus;
   final ActivateWithCode _activateWithCode;
+  final ActivateFromPurchase _activateFromPurchase;
 
   Future<void> loadStatus() async {
     state = state.copyWith(isLoading: true, resetMessages: true);
     try {
-      final ActivationStatus status =
-          await _getActivationStatus(const NoParams());
+      final ActivationStatus status = await _getActivationStatus(
+        const NoParams(),
+      );
       state = state.copyWith(
         isPremium: status.isPremium,
         activatedAt: status.activatedAt,
@@ -53,8 +57,9 @@ class ActivationNotifier extends StateNotifier<ActivationState> {
       }
 
       await _activateWithCode(ActivateWithCodeParams(code.trim()));
-      final ActivationStatus status =
-          await _getActivationStatus(const NoParams());
+      final ActivationStatus status = await _getActivationStatus(
+        const NoParams(),
+      );
       state = state.copyWith(
         isPremium: status.isPremium,
         activatedAt: status.activatedAt,
@@ -63,10 +68,7 @@ class ActivationNotifier extends StateNotifier<ActivationState> {
         successMessage: 'Aktivasi berhasil. Terima kasih!',
       );
     } on ActivationException catch (error) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: error.message,
-      );
+      state = state.copyWith(isLoading: false, errorMessage: error.message);
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
@@ -74,5 +76,30 @@ class ActivationNotifier extends StateNotifier<ActivationState> {
       );
     }
   }
-}
 
+  Future<void> activateFromPurchase() async {
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      successMessage: null,
+    );
+    try {
+      await _activateFromPurchase(const NoParams());
+      final ActivationStatus status = await _getActivationStatus(
+        const NoParams(),
+      );
+      state = state.copyWith(
+        isPremium: status.isPremium,
+        activatedAt: status.activatedAt,
+        codeUsed: status.codeUsed,
+        isLoading: false,
+        successMessage: 'Pembelian premium berhasil dipulihkan.',
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Gagal memperbarui status premium',
+      );
+    }
+  }
+}

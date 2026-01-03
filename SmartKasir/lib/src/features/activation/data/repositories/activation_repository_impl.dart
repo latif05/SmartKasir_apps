@@ -47,5 +47,13 @@ class ActivationRepositoryImpl implements ActivationRepository {
     );
     await _localDataSource.markCodeUsed(normalizedCode);
   }
-}
 
+  @override
+  Future<void> markPremiumFromPurchase() async {
+    await _localDataSource.markStatus(
+      isPremium: true,
+      codeUsed: 'IAP',
+      activatedAt: DateTime.now(),
+    );
+  }
+}

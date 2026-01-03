@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injector.dart';
 import '../../domain/repositories/activation_repository.dart';
 import '../../domain/usecases/activate_with_code.dart';
+import '../../domain/usecases/activate_from_purchase.dart';
 import '../../domain/usecases/get_activation_status.dart';
 import '../state/activation_notifier.dart';
 import '../state/activation_state.dart';
@@ -19,10 +20,15 @@ final activateWithCodeProvider = Provider<ActivateWithCode>((ref) {
   return ActivateWithCode(ref.read(activationRepositoryProvider));
 });
 
+final activateFromPurchaseProvider = Provider<ActivateFromPurchase>((ref) {
+  return ActivateFromPurchase(ref.read(activationRepositoryProvider));
+});
+
 final activationNotifierProvider =
     StateNotifierProvider<ActivationNotifier, ActivationState>((ref) {
-  return ActivationNotifier(
-    ref.read(getActivationStatusProvider),
-    ref.read(activateWithCodeProvider),
-  );
-});
+      return ActivationNotifier(
+        ref.read(getActivationStatusProvider),
+        ref.read(activateWithCodeProvider),
+        ref.read(activateFromPurchaseProvider),
+      );
+    });
